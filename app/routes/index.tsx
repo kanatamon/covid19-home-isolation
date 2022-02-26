@@ -1,9 +1,23 @@
 import * as React from 'react'
-import { ActionFunction, Form, json, redirect, useTransition } from 'remix'
-import { createCustomEqual } from 'fast-equals'
-import { Wrapper, Status } from '@googlemaps/react-wrapper'
 import { Prisma } from '@prisma/client'
+import { ActionFunction, Form, json, redirect, useTransition } from 'remix'
+import { Status, Wrapper } from '@googlemaps/react-wrapper'
+
 import { db } from '~/utils/db.server'
+import { Map } from '~/components/map'
+
+const ZONES = ['รพ.ค่าย', 'มทบ.43', 'กองพล ร.5', 'บชร.4', 'พัน.ขส']
+
+const INITIAL_ZOOM = 14
+const INITIAL_LAT_LNG = {
+  lat: 8.0294121,
+  lng: 99.6502966,
+}
+
+enum EditingMode {
+  PinMap,
+  EditForm,
+}
 
 type ActionData = {
   formError?: string
@@ -26,8 +40,6 @@ type ActionData = {
     names: string[]
   }
 }
-
-const badRequest = (data: ActionData) => json(data, { status: 400 })
 
 export const action: ActionFunction = async ({ request }) => {
   const form = await request.formData()
@@ -94,36 +106,16 @@ export const action: ActionFunction = async ({ request }) => {
   return redirect(`/form-response`)
 }
 
-function isStringArray(array: unknown[]): array is string[] {
-  return array.every((item) => typeof item === 'string')
-}
-
-const ZONES = ['รพ.ค่าย', 'มทบ.43', 'กองพล ร.5', 'บชร.4', 'พัน.ขส']
-
-const initialId = 0
-const genId = (): number => Date.now()
-
-const initialZoom = 14
-const initialLatLng = {
-  lat: 8.0294121,
-  lng: 99.6502966,
-}
-
-enum EditingMode {
-  PinMap,
-  EditForm,
-}
-
 export default function Index() {
   const transition = useTransition()
   const [editingMode, setEditingMode] = React.useState<EditingMode>(
     EditingMode.PinMap
   )
   const [patientIds, setPatientIds] = React.useState<number[]>(() => {
-    return [initialId]
+    return [genId()]
   })
   const [center, setCenter] =
-    React.useState<google.maps.LatLngLiteral>(initialLatLng)
+    React.useState<google.maps.LatLngLiteral>(INITIAL_LAT_LNG)
 
   const onIdle = (m: google.maps.Map) => {
     setCenter(m.getCenter()!.toJSON())
@@ -301,8 +293,8 @@ export default function Index() {
         >
           <Map
             canInteract={canPinMap}
-            // center={center}
-            // zoom={zoom}
+            initialLatLng={INITIAL_LAT_LNG}
+            initialZoom={INITIAL_ZOOM}
             onIdle={onIdle}
             style={{ width: '100%', height: '100%' }}
             fullscreenControl={false}
@@ -334,158 +326,6 @@ const render = (status: Status) => {
   return <h1>{status}</h1>
 }
 
-interface MapProps extends google.maps.MapOptions {
-  style: { [key: string]: string }
-  isRenderCenterMarker?: boolean
-  onClick?: (e: google.maps.MapMouseEvent) => void
-  onIdle?: (map: google.maps.Map) => void
-  canInteract?: boolean
-}
-
-const Map: React.FC<MapProps> = ({
-  isRenderCenterMarker = false,
-  canInteract = true,
-  onClick,
-  onIdle,
-  children,
-  style,
-  ...options
-}) => {
-  const ref = React.useRef<HTMLDivElement>(null)
-  const [map, setMap] = React.useState<google.maps.Map>()
-  const [marker, setMarker] = React.useState<google.maps.Marker>()
-
-  React.useEffect(() => {
-    if (!isRenderCenterMarker) {
-      return
-    }
-
-    if (!marker) {
-      setMarker(new google.maps.Marker())
-    }
-
-    // remove marker from map on unmount
-    return () => {
-      if (marker) {
-        marker.setMap(null)
-      }
-    }
-  }, [marker, isRenderCenterMarker])
-
-  React.useEffect(() => {
-    if (ref.current && !map) {
-      const newMap = new window.google.maps.Map(ref.current, {
-        ...options,
-        center: initialLatLng,
-        zoom: initialZoom,
-      })
-      setMap(newMap)
-    }
-  }, [map])
-
-  React.useEffect(() => {
-    marker?.setMap(map ?? null)
-    setMarkerAtMapCenter()
-  }, [map, options?.zoom])
-
-  useDeepCompareEffectForMaps(() => {
-    map?.setOptions(options)
-  }, [map, options])
-
-  React.useEffect(() => {
-    if (map) {
-      ;['idle', 'drag'].forEach((eventName) =>
-        google.maps.event.clearListeners(map, eventName)
-      )
-
-      if (onIdle) {
-        map.addListener('idle', () => onIdle(map))
-      }
-
-      if (isRenderCenterMarker) {
-        map.addListener('drag', setMarkerAtMapCenter)
-      }
-    }
-  }, [map, onIdle, isRenderCenterMarker])
-
-  const setMarkerAtMapCenter = () => {
-    marker?.setPosition(map?.getCenter())
-  }
-
-  const smartInteractGuard = !canInteract ? (
-    <div
-      style={{
-        position: 'absolute',
-        background: 'transparent',
-        width: '100%',
-        height: '100%',
-        zIndex: 9999,
-      }}
-    />
-  ) : null
-
-  return (
-    <div style={style}>
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          position: 'relative',
-          isolation: 'isolate',
-        }}
-      >
-        {smartInteractGuard}
-        <div ref={ref} style={{ width: '100%', height: '100%' }} />
-        {React.Children.map(children, (child) => {
-          if (React.isValidElement(child)) {
-            // set the map prop on the child component
-            return React.cloneElement(child, { map })
-          }
-        })}
-      </div>
-    </div>
-  )
-}
-
-function useDeepCompareEffectForMaps(
-  callback: React.EffectCallback,
-  dependencies: any[]
-) {
-  React.useEffect(callback, dependencies.map(useDeepCompareMemoize))
-}
-
-function useDeepCompareMemoize(value: any) {
-  const ref = React.useRef()
-
-  if (!deepCompareEqualsForMaps(value, ref.current)) {
-    ref.current = value
-  }
-
-  return ref.current
-}
-
-const deepCompareEqualsForMaps = createCustomEqual(
-  (deepEqual) => (a: any, b: any) => {
-    if (
-      isLatLngLiteral(a) ||
-      a instanceof google.maps.LatLng ||
-      isLatLngLiteral(b) ||
-      b instanceof google.maps.LatLng
-    ) {
-      return new google.maps.LatLng(a).equals(new google.maps.LatLng(b))
-    }
-
-    // use fast-equals for other objects
-    return deepEqual(a, b)
-  }
-)
-
-const isLatLngLiteral = (obj: any) =>
-  obj != null &&
-  typeof obj === 'object' &&
-  Number.isFinite(obj.lat) &&
-  Number.isFinite(obj.lng)
-
 const Marker: React.FC<google.maps.MarkerOptions> = (options) => {
   const [marker, setMarker] = React.useState<google.maps.Marker>()
 
@@ -509,4 +349,15 @@ const Marker: React.FC<google.maps.MarkerOptions> = (options) => {
   }, [marker, options])
 
   return null
+}
+
+const badRequest = (data: ActionData) => json(data, { status: 400 })
+
+const initialId = 0
+const genId = (isInitial: boolean = false): number => {
+  return isInitial ? initialId : Date.now()
+}
+
+function isStringArray(array: unknown[]): array is string[] {
+  return array.every((item) => typeof item === 'string')
 }
