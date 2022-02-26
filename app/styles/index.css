@@ -19,12 +19,20 @@ html {
   box-sizing: inherit;
 }
 
-label,
-h3 {
+body {
+  font-family: 'Noto Serif Thai', serif;
+}
+
+label {
   display: block;
-  font-size: large;
+  font-size: 1rem;
   margin-bottom: 0.25rem;
   font-weight: bold;
+}
+
+p,
+a {
+  font-size: 1rem;
 }
 
 input,
@@ -32,8 +40,7 @@ button,
 select {
   width: 100%;
   padding: 0.25rem;
-  box-sizing: border-box;
-  font-size: larger;
+  font-size: 1.25rem;
 }
 
 .primary-btn {

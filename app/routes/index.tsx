@@ -1,15 +1,101 @@
 import * as React from 'react'
-import { Form, type LinksFunction } from 'remix'
+import { ActionFunction, Form, json, redirect, useTransition } from 'remix'
 import { createCustomEqual } from 'fast-equals'
 import { Wrapper, Status } from '@googlemaps/react-wrapper'
-import stylesUrl from '~/styles/index.css'
+import { Prisma } from '@prisma/client'
+import { db } from '~/utils/db.server'
 
-export const links: LinksFunction = () => {
-  return [{ rel: 'stylesheet', href: stylesUrl }]
+type ActionData = {
+  formError?: string
+  fieldErrors?: {
+    lat: string | undefined
+    lng: string | undefined
+    zone: string | undefined
+    address: string | undefined
+    landmarkNote: string | undefined
+    phone: string | undefined
+    names: string | undefined
+  }
+  fields?: {
+    lat: number
+    lng: number
+    zone: string
+    address: string
+    landmarkNote: string
+    phone: string
+    names: string[]
+  }
 }
 
-const render = (status: Status) => {
-  return <h1>{status}</h1>
+const badRequest = (data: ActionData) => json(data, { status: 400 })
+
+export const action: ActionFunction = async ({ request }) => {
+  const form = await request.formData()
+
+  const lat = Number(form.get('lat'))
+  const lng = Number(form.get('lng'))
+  const zone = form.get('zone')
+  const address = form.get('address')
+  const landmarkNote = form.get('landmarkNote')
+  const phone = form.get('phone')
+  const names = form.getAll('name')
+
+  if (
+    Number.isNaN(lat) ||
+    Number.isNaN(lng) ||
+    typeof zone !== 'string' ||
+    typeof address !== 'string' ||
+    typeof landmarkNote !== 'string' ||
+    typeof phone !== 'string' ||
+    !isStringArray(names)
+  ) {
+    return badRequest({
+      formError: `Form not submitted correctly.`,
+    })
+  }
+
+  // TODO: validate fields
+  const fieldErrors = {
+    lat: undefined,
+    lng: undefined,
+    zone: undefined,
+    address: undefined,
+    landmarkNote: undefined,
+    phone: undefined,
+    names: undefined,
+  }
+  const fields = {
+    lat,
+    lng,
+    zone,
+    address,
+    landmarkNote,
+    phone,
+    names,
+  }
+  if (Object.values(fieldErrors).some(Boolean)) {
+    return badRequest({ fieldErrors, fields })
+  }
+
+  await db.homeIsolationForm.create({
+    data: {
+      lat: new Prisma.Decimal(lat),
+      lng: new Prisma.Decimal(lng),
+      zone,
+      address,
+      landmarkNote: !!landmarkNote ? landmarkNote : null,
+      phone,
+      patients: {
+        create: names.map((name) => ({ name })),
+      },
+    },
+  })
+
+  return redirect(`/form-response`)
+}
+
+function isStringArray(array: unknown[]): array is string[] {
+  return array.every((item) => typeof item === 'string')
 }
 
 const ZONES = ['รพ.ค่าย', 'มทบ.43', 'กองพล ร.5', 'บชร.4', 'พัน.ขส']
@@ -23,16 +109,17 @@ enum EditingMode {
 }
 
 export default function Index() {
+  const transition = useTransition()
   const [editingMode, setEditingMode] = React.useState<EditingMode>(
     EditingMode.PinMap
   )
   const [patientIds, setPatientIds] = React.useState<number[]>(() => {
     return [initialId]
   })
-  const [zoom, setZoom] = React.useState(3) // initial zoom
+  const [zoom, setZoom] = React.useState(14) // initial zoom
   const [center, setCenter] = React.useState<google.maps.LatLngLiteral>({
-    lat: 0,
-    lng: 0,
+    lat: 8.0294121,
+    lng: 99.6502966,
   })
 
   const onIdle = (m: google.maps.Map) => {
@@ -47,9 +134,20 @@ export default function Index() {
     setPatientIds((prev) => prev.filter((id) => id !== patientId))
   }
 
-  // const confirmPinMapBox =
+  const geolocationPlace = (
+    <p
+      style={{
+        backgroundColor: 'gainsboro',
+        padding: '12px 16px',
+        margin: 0,
+      }}
+    >
+      TODO: Add the nearest place from geolocation
+    </p>
+  )
 
   let editor = null
+
   if (editingMode === EditingMode.EditForm) {
     editor = (
       <div
@@ -59,10 +157,15 @@ export default function Index() {
           gap: 32,
         }}
       >
-        <button onClick={() => setEditingMode(EditingMode.PinMap)}>
-          เปลี่ยนพิกัด
-        </button>
+        <div>
+          {geolocationPlace}
+          <div style={{ height: 24 }} />
+          <button onClick={() => setEditingMode(EditingMode.PinMap)}>
+            เปลี่ยนพิกัด
+          </button>
+        </div>
         <Form
+          method="post"
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -93,10 +196,10 @@ export default function Index() {
             />
           </div>
           <div>
-            <label htmlFor="note">จุดสังเกตุ </label>
+            <label htmlFor="landmarkNote">จุดสังเกตุ </label>
             <input
-              name="note"
-              id="note"
+              name="landmarkNote"
+              id="landmarkNote"
               placeholder="เช่น ป้ายชื่อห้องที่กักตัว"
             />
           </div>
@@ -107,7 +210,6 @@ export default function Index() {
               id="phone"
               name="phone"
               placeholder="เช่น 089-123-1234, 077-123-123"
-              pattern="[0-9]{3}-[0-9]{3}-[0-9]{3,4}"
             />
           </div>
           {patientIds.map((patientId, idx) => {
@@ -121,46 +223,55 @@ export default function Index() {
                 <div style={{ display: 'flex', gap: 8 }}>
                   <input name="name" id={htmlId} />
                   <button
-                    style={{ width: 48 }}
+                    style={{ width: 44 }}
                     onClick={(event) => {
                       event.preventDefault()
                       deletePatient(patientId)
                     }}
                   >
-                    X
+                    &times;
                   </button>
                 </div>
               </div>
             )
           })}
-          <input
-            type="button"
-            value="Add Patient"
-            readOnly
+          <button
             onClick={(event) => {
               event.preventDefault()
               addNewPatient()
             }}
-          />
-
+          >
+            {`เพิ่มรายชื่อผู้ป่วยคนที่ ${patientIds.length + 1}`}
+          </button>
           <button
             type="submit"
-            style={{ marginTop: '32px' }}
+            style={{
+              marginTop: '32px',
+              transition: '250ms opacity',
+              opacity: transition.state === 'submitting' ? 0.5 : 1,
+            }}
             className="primary-btn"
+            disabled={transition.state === 'submitting'}
           >
-            ส่งแบบฟอร์ม
+            {transition.state === 'submitting'
+              ? 'กำลังส่งแบบฟอร์ม...'
+              : 'ส่งแบบฟอร์ม'}
           </button>
         </Form>
       </div>
     )
   } else if (editingMode === EditingMode.PinMap) {
     editor = (
-      <button
-        className="primary-btn"
-        onClick={() => setEditingMode(EditingMode.EditForm)}
-      >
-        ยืนยันพิกัด
-      </button>
+      <div>
+        {geolocationPlace}
+        <div style={{ height: 24 }} />
+        <button
+          className="primary-btn"
+          onClick={() => setEditingMode(EditingMode.EditForm)}
+        >
+          ยืนยันพิกัด
+        </button>
+      </div>
     )
   }
 
@@ -175,32 +286,38 @@ export default function Index() {
         position: 'relative',
       }}
     >
-      <Wrapper
-        apiKey={'AIzaSyBvzV8nKgqy1Ia3_gR3jJ1cv-F9d5J9Rzg'}
-        render={render}
-      >
-        <Map
-          canInteract={canPinMap}
-          center={center}
-          zoom={zoom}
-          onIdle={onIdle}
-          fullscreenControl={false}
-          streetViewControl={false}
-          style={{ flexGrow: '1' }}
-          isRenderCenterMarker
-        />
-      </Wrapper>
       <div
         style={{
           // @ts-ignore
-          '--height':
-            editingMode === EditingMode.PinMap ? 'max-content' : '80%',
+          '--height': editingMode === EditingMode.PinMap ? '80%' : '20%',
           height: 'var(--height)',
-          padding: '48px 24px',
+        }}
+      >
+        <Wrapper
+          apiKey={'AIzaSyBvzV8nKgqy1Ia3_gR3jJ1cv-F9d5J9Rzg'}
+          render={render}
+        >
+          <Map
+            canInteract={canPinMap}
+            center={center}
+            zoom={zoom}
+            onIdle={onIdle}
+            style={{ width: '100%', height: '100%' }}
+            fullscreenControl={false}
+            streetViewControl={false}
+            mapTypeControl={false}
+            keyboardShortcuts={false}
+            zoomControl={false}
+            isRenderCenterMarker
+          />
+        </Wrapper>
+      </div>
+      <div
+        style={{
+          flexGrow: 1,
+          padding: '32px 24px',
           position: 'relative',
-          // top: '-1rem',
-          // borderTopLeftRadius: 16,
-          // borderTopRightRadius: 16,
+          top: '-24px',
           backgroundColor: 'white',
           overflow: 'auto',
         }}
@@ -209,6 +326,10 @@ export default function Index() {
       </div>
     </div>
   )
+}
+
+const render = (status: Status) => {
+  return <h1>{status}</h1>
 }
 
 interface MapProps extends google.maps.MapOptions {

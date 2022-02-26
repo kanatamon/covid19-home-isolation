@@ -1,17 +1,35 @@
 import {
   Links,
+  LinksFunction,
   LiveReload,
   Meta,
   Outlet,
   Scripts,
-  ScrollRestoration
-} from "remix";
-import type { MetaFunction } from "remix";
+  ScrollRestoration,
+} from 'remix'
+import type { MetaFunction } from 'remix'
+
+import stylesUrl from '~/styles/index.css'
 
 export const meta: MetaFunction = () => {
-  return { title: "New Remix App" };
-};
+  return { title: 'New Remix App' }
+}
 
+export const links: LinksFunction = () => {
+  return [
+    { rel: 'stylesheet', href: stylesUrl },
+    { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.gstatic.com',
+      crossOrigin: 'anonymous',
+    },
+    {
+      rel: 'stylesheet',
+      href: 'https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;700&display=swap',
+    },
+  ]
+}
 export default function App() {
   return (
     <html lang="en">
@@ -28,5 +46,5 @@ export default function App() {
         <LiveReload />
       </body>
     </html>
-  );
+  )
 }
