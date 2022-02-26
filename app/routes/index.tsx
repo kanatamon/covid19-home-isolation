@@ -103,6 +103,12 @@ const ZONES = ['รพ.ค่าย', 'มทบ.43', 'กองพล ร.5', '
 const initialId = 0
 const genId = (): number => Date.now()
 
+const initialZoom = 14
+const initialLatLng = {
+  lat: 8.0294121,
+  lng: 99.6502966,
+}
+
 enum EditingMode {
   PinMap,
   EditForm,
@@ -116,14 +122,10 @@ export default function Index() {
   const [patientIds, setPatientIds] = React.useState<number[]>(() => {
     return [initialId]
   })
-  const [zoom, setZoom] = React.useState(14) // initial zoom
-  const [center, setCenter] = React.useState<google.maps.LatLngLiteral>({
-    lat: 8.0294121,
-    lng: 99.6502966,
-  })
+  const [center, setCenter] =
+    React.useState<google.maps.LatLngLiteral>(initialLatLng)
 
   const onIdle = (m: google.maps.Map) => {
-    setZoom(m.getZoom()!)
     setCenter(m.getCenter()!.toJSON())
   }
 
@@ -299,8 +301,8 @@ export default function Index() {
         >
           <Map
             canInteract={canPinMap}
-            center={center}
-            zoom={zoom}
+            // center={center}
+            // zoom={zoom}
             onIdle={onIdle}
             style={{ width: '100%', height: '100%' }}
             fullscreenControl={false}
@@ -372,7 +374,11 @@ const Map: React.FC<MapProps> = ({
 
   React.useEffect(() => {
     if (ref.current && !map) {
-      const newMap = new window.google.maps.Map(ref.current, options)
+      const newMap = new window.google.maps.Map(ref.current, {
+        ...options,
+        center: initialLatLng,
+        zoom: initialZoom,
+      })
       setMap(newMap)
     }
   }, [map])
