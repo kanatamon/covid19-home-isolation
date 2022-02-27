@@ -27,12 +27,6 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
     return [genId()]
   })
 
-  React.useEffect(() => {
-    if (Array.isArray(data?.patients)) {
-      setPatientIds(data.patients.map((patient) => patient.id))
-    }
-  }, [data?.patients])
-
   const formRef = React.useRef<HTMLFormElement>(null)
   React.useEffect(
     function resetFormAfterDisabledEditor() {
@@ -41,6 +35,15 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
       }
     },
     [isEditable]
+  )
+
+  React.useEffect(
+    function syncPatientIdsToLoaderData() {
+      if (Array.isArray(data?.patients)) {
+        setPatientIds(data.patients.map((patient) => patient.id))
+      }
+    },
+    [data?.patients]
   )
 
   const addNewPatient = () => {
