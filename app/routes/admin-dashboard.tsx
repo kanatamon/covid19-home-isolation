@@ -43,6 +43,7 @@ export default function AdminDashboardRoute() {
           height: '100%',
           overflow: 'auto',
           padding: 12,
+          backgroundColor: 'whitesmoke',
         }}
       >
         <ul
@@ -63,6 +64,7 @@ export default function AdminDashboardRoute() {
                   borderRadius: 6,
                   border: '1px solid darkgrey',
                   padding: '24px 16px',
+                  backgroundColor: 'white',
                 }}
               >
                 <HomeIsolationFormSmartView
