@@ -1,12 +1,11 @@
 import * as React from 'react'
 import { Status, Wrapper } from '@googlemaps/react-wrapper'
 import { HomeIsolationForm, Patient } from '@prisma/client'
-import { Form, json, LoaderFunction, useLoaderData } from 'remix'
+import { json, LoaderFunction, useLoaderData } from 'remix'
 
 import { db } from '~/utils/db.server'
 import { requireAdminPermission } from '~/utils/session.server'
 import { Map } from '~/components/map'
-import { HomeIsolationFormView } from '~/components/home-isolation-form-view'
 import { HomeIsolationFormSmartView } from '~/components/home-isolation-form-smart-view'
 
 type LoaderData = {
@@ -20,6 +19,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     include: {
       patients: true,
     },
+    orderBy: { admittedAt: 'desc' },
     take: 20,
   })
   return json<LoaderData>({ homeIsolationForms })
