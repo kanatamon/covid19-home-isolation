@@ -63,6 +63,27 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             name="lng"
             value={data?.lng?.toString()}
           />
+
+          <input
+            type="hidden"
+            name="admittedTzOffsetInISO"
+            value={getTimezoneOffsetInISO(
+              new Date(data?.admittedAt ?? Date.now())
+            )}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="admittedAt">วันเวลาเริ่มเข้าการรักษา</label>
+          <input
+            type="datetime-local"
+            defaultValue={toLocaleDateTime(
+              new Date(data?.admittedAt ?? Date.now())
+            )}
+            name="admittedAt"
+            id="admittedAt"
+            disabled={!isEditable}
+          />
         </div>
 
         <div>
@@ -223,4 +244,27 @@ const initialId = '0'
 
 const genId = (isInitial: boolean = false): string => {
   return isInitial ? initialId : Date.now().toString()
+}
+
+const toLocaleDateTime = (date: Date): string => {
+  const [month, day, year] = date.toLocaleDateString().split('/')
+  const yyyy = year.padStart(4, '0')
+  const MM = month.padStart(2, '0')
+  const dd = day.padStart(2, '0')
+
+  const hh = date.getHours().toString().padStart(2, '0')
+  const mm = date.getMinutes().toString().padStart(2, '0')
+
+  return `${yyyy}-${MM}-${dd}T${hh}:${mm}`
+}
+
+const getTimezoneOffsetInISO = (date: Date): string => {
+  const tz = date.getTimezoneOffset()
+  const sign = tz > 0 ? '-' : '+'
+  const hh = Math.floor(Math.abs(tz) / 60)
+    .toString()
+    .padStart(2, '0')
+  const mm = (Math.abs(tz) % 60).toString().padStart(2, '0')
+
+  return `${sign}${hh}:${mm}`
 }

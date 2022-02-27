@@ -14,6 +14,7 @@ model HomeIsolationForm {
   id           String    @id @default(uuid())
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  admittedAt   DateTime  @default(now())
   lat          Decimal
   lng          Decimal
   zone         String
