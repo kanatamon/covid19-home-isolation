@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { type ActionFunction, json, redirect } from 'remix'
 import { db } from '~/utils/db.server'
+import { isStringArray } from '../utils/type-validator'
 
 type ActionData = {
   formError?: string
@@ -105,7 +106,3 @@ export const action: ActionFunction = async ({ request }) => {
 }
 
 const badRequest = (data: ActionData) => json(data, { status: 400 })
-
-function isStringArray(array: unknown[]): array is string[] {
-  return array.every((item) => typeof item === 'string')
-}

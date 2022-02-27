@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { HomeIsolationForm, Patient } from '@prisma/client'
-import { Form, useTransition } from 'remix'
+import { useFetcher } from 'remix'
 
 const ZONES = ['รพ.ค่าย', 'มทบ.43', 'กองพล ร.5', 'บชร.4', 'พัน.ขส']
 
@@ -17,13 +17,21 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
   data,
   isEditable = false,
 }) => {
-  const transition = useTransition()
+  const dataFetcher = useFetcher()
+  const deleteFetcher = useFetcher()
+
   const [patientIds, setPatientIds] = React.useState<string[]>(() => {
     if (data.patients) {
       return data.patients.map((patient) => patient.id)
     }
     return [genId()]
   })
+
+  React.useEffect(() => {
+    if (Array.isArray(data?.patients)) {
+      setPatientIds(data.patients.map((patient) => patient.id))
+    }
+  }, [data?.patients])
 
   const formRef = React.useRef<HTMLFormElement>(null)
   React.useEffect(
@@ -45,9 +53,14 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
 
   const isCreated = typeof data.id === 'string'
 
+  const isDisabledAll =
+    !isEditable ||
+    dataFetcher.state === 'submitting' ||
+    deleteFetcher.state === 'submitting'
+
   return (
     <div>
-      <Form
+      <dataFetcher.Form
         ref={formRef}
         action={action}
         method="post"
@@ -89,7 +102,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             )}
             name="admittedAt"
             id="admittedAt"
-            disabled={!isEditable}
+            disabled={isDisabledAll}
           />
         </div>
 
@@ -99,7 +112,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             defaultValue={data?.zone}
             name="zone"
             id="zone"
-            disabled={!isEditable}
+            disabled={isDisabledAll}
           >
             {ZONES.map((zone) => (
               <option key={zone} value={zone}>
@@ -116,7 +129,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             name="address"
             id="address"
             placeholder="เช่น ***บชร4 ส2 ห้องที่ 2"
-            disabled={!isEditable}
+            disabled={isDisabledAll}
           />
         </div>
 
@@ -127,7 +140,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             name="landmarkNote"
             id="landmarkNote"
             placeholder="เช่น ป้ายชื่อห้องที่กักตัว"
-            disabled={!isEditable}
+            disabled={isDisabledAll}
           />
         </div>
 
@@ -139,7 +152,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             id="phone"
             name="phone"
             placeholder="เช่น 089-123-1234, 077-123-123"
-            disabled={!isEditable}
+            disabled={isDisabledAll}
           />
         </div>
 
@@ -154,10 +167,15 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
               <label htmlFor={htmlId}>ชื่อ-สกุล ผู้ป่วยคนที่ {noDisplay}</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
+                  type="hidden"
+                  name="patientId"
+                  value={patient?.id ?? 'new'}
+                />
+                <input
                   defaultValue={patient?.name}
                   name="name"
                   id={htmlId}
-                  disabled={!isEditable}
+                  disabled={isDisabledAll}
                 />
                 {isEditable ? (
                   <button
@@ -166,6 +184,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
                       event.preventDefault()
                       deletePatient(patientId)
                     }}
+                    disabled={isDisabledAll}
                   >
                     &times;
                   </button>
@@ -177,6 +196,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
 
         {isEditable ? (
           <button
+            disabled={isDisabledAll}
             onClick={(event) => {
               event.preventDefault()
               addNewPatient()
@@ -193,10 +213,18 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
               {isCreated ? (
                 <>
                   <input type="hidden" name="_method" value="update" />
-                  <button type="submit" className="primary-btn">
-                    บันทึก
+                  <button
+                    type="submit"
+                    className="primary-btn"
+                    disabled={isDisabledAll}
+                  >
+                    {dataFetcher.state === 'submitting'
+                      ? 'กำลังบันทึก...'
+                      : 'บันทึก'}
                   </button>
-                  <button type="reset">ยกเลิก</button>
+                  <button type="reset" disabled={isDisabledAll}>
+                    ยกเลิก
+                  </button>
                 </>
               ) : (
                 <>
@@ -205,12 +233,12 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
                     type="submit"
                     style={{
                       transition: '250ms opacity',
-                      opacity: transition.state === 'submitting' ? 0.5 : 1,
+                      opacity: dataFetcher.state === 'submitting' ? 0.5 : 1,
                     }}
                     className="primary-btn"
-                    disabled={transition.state === 'submitting'}
+                    disabled={dataFetcher.state === 'submitting'}
                   >
-                    {transition.state === 'submitting'
+                    {dataFetcher.state === 'submitting'
                       ? 'กำลังส่งแบบฟอร์ม...'
                       : 'ส่งแบบฟอร์ม'}
                   </button>
@@ -219,12 +247,12 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             </div>
           </>
         ) : null}
-      </Form>
+      </dataFetcher.Form>
 
       {isEditable && isCreated ? (
         <>
           <div style={{ height: '1.5em' }} />
-          <Form method="post" action={action}>
+          <deleteFetcher.Form method="post" action={action}>
             <input type="hidden" name="_method" value="delete" />
             <button
               type="submit"
@@ -237,10 +265,13 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
                 fontWeight: 'bold',
                 width: 'max-content',
               }}
+              disabled={isDisabledAll}
             >
-              ลบข้อมูล
+              {deleteFetcher.state === 'submitting'
+                ? 'กำลังลบข้อมูล...'
+                : 'ลบข้อมูล'}
             </button>
-          </Form>
+          </deleteFetcher.Form>
         </>
       ) : null}
     </div>
