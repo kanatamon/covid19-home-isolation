@@ -5,6 +5,7 @@ import { Status, Wrapper } from '@googlemaps/react-wrapper'
 
 import { db } from '~/utils/db.server'
 import { Map } from '~/components/map'
+import { HomeIsolationFormView } from '~/components/home-isolation-form-view'
 
 const ZONES = ['รพ.ค่าย', 'มทบ.43', 'กองพล ร.5', 'บชร.4', 'พัน.ขส']
 
@@ -107,13 +108,13 @@ export const action: ActionFunction = async ({ request }) => {
 }
 
 export default function Index() {
-  const transition = useTransition()
+  // const transition = useTransition()
   const [editingMode, setEditingMode] = React.useState<EditingMode>(
     EditingMode.PinMap
   )
-  const [patientIds, setPatientIds] = React.useState<number[]>(() => {
-    return [genId()]
-  })
+  // const [patientIds, setPatientIds] = React.useState<number[]>(() => {
+  //   return [genId()]
+  // })
   const [center, setCenter] =
     React.useState<google.maps.LatLngLiteral>(INITIAL_LAT_LNG)
 
@@ -121,12 +122,12 @@ export default function Index() {
     setCenter(m.getCenter()!.toJSON())
   }
 
-  const addNewPatient = () => {
-    setPatientIds((prev) => [...prev, genId()])
-  }
-  const deletePatient = (patientId: number) => {
-    setPatientIds((prev) => prev.filter((id) => id !== patientId))
-  }
+  // const addNewPatient = () => {
+  //   setPatientIds((prev) => [...prev, genId()])
+  // }
+  // const deletePatient = (patientId: number) => {
+  //   setPatientIds((prev) => prev.filter((id) => id !== patientId))
+  // }
 
   const geolocationPlace = (
     <p
@@ -158,7 +159,15 @@ export default function Index() {
             เปลี่ยนพิกัด
           </button>
         </div>
-        <Form
+        <HomeIsolationFormView
+          action="."
+          data={{
+            lat: new Prisma.Decimal(center.lat),
+            lng: new Prisma.Decimal(center.lng),
+          }}
+          isEditable
+        />
+        {/* <Form
           method="post"
           style={{
             display: 'flex',
@@ -251,7 +260,7 @@ export default function Index() {
               ? 'กำลังส่งแบบฟอร์ม...'
               : 'ส่งแบบฟอร์ม'}
           </button>
-        </Form>
+        </Form> */}
       </div>
     )
   } else if (editingMode === EditingMode.PinMap) {

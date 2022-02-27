@@ -25,22 +25,22 @@ body {
 
 label {
   display: block;
-  font-size: 1rem;
-  margin-bottom: 0.25rem;
+  font-size: 1em;
+  margin-bottom: 0.25em;
   font-weight: bold;
 }
 
 p,
 a {
-  font-size: 1rem;
+  font-size: 1em;
 }
 
 input,
 button,
 select {
   width: 100%;
-  padding: 0.25rem;
-  font-size: 1.25rem;
+  padding: 0.25em;
+  font-size: 1.25em;
 }
 
 .primary-btn {
