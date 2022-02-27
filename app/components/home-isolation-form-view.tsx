@@ -16,10 +16,6 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
   action,
   data,
   isEditable = false,
-}: {
-  action: string
-  data: FormData
-  isEditable?: boolean
 }) => {
   const transition = useTransition()
   const [patientIds, setPatientIds] = React.useState<string[]>(() => {
@@ -28,6 +24,16 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
     }
     return [genId()]
   })
+
+  const formRef = React.useRef<HTMLFormElement>(null)
+  React.useEffect(
+    function resetFormAfterDisabledEditor() {
+      if (!isEditable) {
+        formRef.current?.reset()
+      }
+    },
+    [isEditable]
+  )
 
   const addNewPatient = () => {
     setPatientIds((prev) => [...prev, genId()])
@@ -42,6 +48,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
   return (
     <div>
       <Form
+        ref={formRef}
         action={action}
         method="post"
         style={{
