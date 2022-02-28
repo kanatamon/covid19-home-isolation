@@ -4,11 +4,11 @@ import { useFetcher } from 'remix'
 
 const ZONES = ['รพ.ค่าย', 'มทบ.43', 'กองพล ร.5', 'บชร.4', 'พัน.ขส']
 
-type FormData = Partial<HomeIsolationForm & { patients: Patient[] }>
+type Data = Partial<HomeIsolationForm & { patients: Patient[] }>
 
 export type HomeIsolationFromViewProps = {
   action: string
-  data: FormData
+  data: Data
   isEditable?: boolean
 }
 
@@ -20,7 +20,8 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
   const dataFetcher = useFetcher()
   const deleteFetcher = useFetcher()
 
-  const [patientIds, setPatientIds] = React.useState<string[]>(() => {
+  const [isNeedToUpdate, setIsNeedToUpdate] = React.useState(true)
+  const [formPatientIds, setFormPatientIds] = React.useState<string[]>(() => {
     if (data.patients) {
       return data.patients.map((patient) => patient.id)
     }
@@ -38,34 +39,63 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
   )
 
   React.useEffect(
-    function syncPatientIdsToLoaderData() {
-      if (Array.isArray(data?.patients)) {
-        setPatientIds(data.patients.map((patient) => patient.id))
+    function syncPatientIdsOnFormIdsToData() {
+      if (data?.patients) {
+        setFormPatientIds(data.patients.map((patient) => patient.id))
       }
     },
     [data?.patients]
   )
 
+  React.useEffect(() => {
+    watchFormChangedHandler()
+  }, [data, formPatientIds])
+
   const addNewPatient = () => {
-    setPatientIds((prev) => [...prev, genId()])
+    setFormPatientIds((prev) => [...prev, genId()])
   }
 
   const deletePatient = (patientId: string) => {
-    setPatientIds((prev) => prev.filter((id) => id !== patientId))
+    setFormPatientIds((prev) => prev.filter((id) => id !== patientId))
+  }
+  const formResetHandler = () => {
+    if (data?.patients) {
+      setFormPatientIds(data.patients.map((item) => item.id))
+    }
+  }
+  /**
+   * DESIGN NOTE: Due to usage of this functionality, it's designed to be called
+   * manually. The implementation is hight coupling to a existing of HTMLFormElement
+   * referred by `formRef`.
+   *
+   * And the form's values must be readable, even we're intentionally to prevent
+   * any user to edit the form. So, we introduced the implementation of using
+   * `readOnly`'s prop instead of `disabled`. Which the later will disable the form
+   * to be read.
+   */
+  const watchFormChangedHandler = () => {
+    if (!formRef.current) {
+      return false
+    }
+
+    const form = new FormData(formRef.current)
+    setIsNeedToUpdate(isEqual(form, data))
   }
 
   const isCreated = typeof data.id === 'string'
 
-  const isDisabledAll =
-    !isEditable ||
-    dataFetcher.state === 'submitting' ||
-    deleteFetcher.state === 'submitting'
+  const canUserEdit =
+    isEditable &&
+    dataFetcher.state !== 'submitting' &&
+    deleteFetcher.state !== 'submitting'
 
   return (
     <div>
       <dataFetcher.Form
         ref={formRef}
         action={action}
+        onChange={watchFormChangedHandler}
+        onReset={formResetHandler}
         method="post"
         style={{
           display: 'flex',
@@ -105,17 +135,33 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             )}
             name="admittedAt"
             id="admittedAt"
-            disabled={isDisabledAll}
+            readOnly={!canUserEdit}
           />
         </div>
 
         <div>
           <label htmlFor="zone">โซนบริเวณบ้านพัก</label>
+          <input
+            type="hidden"
+            name="zone"
+            value={data?.zone}
+            disabled={canUserEdit}
+          />
           <select
+            // NOTE: We're using `key` here, this is VERY IMPORTANT! to force
+            // composition of using <select> and <option> to be re-mounted.
+            // Due to a change on `data.zone` to the `defaultValue` on <select>.
+            // This won't affect to its <option>, and then caused <option>'s
+            // selected-value to the old value as previous `defaultValue` is
+            // provided.
+            key={data?.zone}
             defaultValue={data?.zone}
             name="zone"
             id="zone"
-            disabled={isDisabledAll}
+            // NOTE: the `readOnly` on <select> is deprecated in HTML5.
+            // Then we introduce to use combination of `disabled` and
+            // <input type="hidden" /> above instead.
+            disabled={!canUserEdit}
           >
             {ZONES.map((zone) => (
               <option key={zone} value={zone}>
@@ -132,7 +178,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             name="address"
             id="address"
             placeholder="เช่น ***บชร4 ส2 ห้องที่ 2"
-            disabled={isDisabledAll}
+            readOnly={!canUserEdit}
           />
         </div>
 
@@ -143,7 +189,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             name="landmarkNote"
             id="landmarkNote"
             placeholder="เช่น ป้ายชื่อห้องที่กักตัว"
-            disabled={isDisabledAll}
+            readOnly={!canUserEdit}
           />
         </div>
 
@@ -155,39 +201,39 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             id="phone"
             name="phone"
             placeholder="เช่น 089-123-1234, 077-123-123"
-            disabled={isDisabledAll}
+            readOnly={!canUserEdit}
           />
         </div>
 
-        {patientIds.map((patientId, idx) => {
+        {formPatientIds.map((serverOrClientPatientId, idx) => {
           const noDisplay = idx + 1
           const htmlId = `name[${idx}]`
-          const patient = data?.patients?.find(
-            (patient) => patient.id === patientId
+          const serverPatient = data?.patients?.find(
+            (patient) => patient.id === serverOrClientPatientId
           )
           return (
-            <div key={patientId}>
+            <div key={serverOrClientPatientId}>
               <label htmlFor={htmlId}>ชื่อ-สกุล ผู้ป่วยคนที่ {noDisplay}</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
                   type="hidden"
                   name="patientId"
-                  value={patient?.id ?? 'new'}
+                  value={serverPatient?.id ?? serverOrClientPatientId}
                 />
                 <input
-                  defaultValue={patient?.name}
+                  defaultValue={serverPatient?.name}
                   name="name"
                   id={htmlId}
-                  disabled={isDisabledAll}
+                  readOnly={!canUserEdit}
                 />
                 {isEditable ? (
                   <button
                     style={{ width: 44 }}
                     onClick={(event) => {
                       event.preventDefault()
-                      deletePatient(patientId)
+                      deletePatient(serverOrClientPatientId)
                     }}
-                    disabled={isDisabledAll}
+                    disabled={!canUserEdit}
                   >
                     &times;
                   </button>
@@ -199,13 +245,13 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
 
         {isEditable ? (
           <button
-            disabled={isDisabledAll}
+            disabled={!canUserEdit}
             onClick={(event) => {
               event.preventDefault()
               addNewPatient()
             }}
           >
-            {`เพิ่มรายชื่อผู้ป่วยคนที่ ${patientIds.length + 1}`}
+            {`เพิ่มรายชื่อผู้ป่วยคนที่ ${formPatientIds.length + 1}`}
           </button>
         ) : null}
 
@@ -216,16 +262,20 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
               {isCreated ? (
                 <>
                   <input type="hidden" name="_method" value="update" />
-                  <button
-                    type="submit"
-                    className="primary-btn"
-                    disabled={isDisabledAll}
-                  >
-                    {dataFetcher.state === 'submitting'
-                      ? 'กำลังบันทึก...'
-                      : 'บันทึก'}
-                  </button>
-                  <button type="reset" disabled={isDisabledAll}>
+                  {isNeedToUpdate ? (
+                    <button
+                      type="submit"
+                      className="primary-btn"
+                      disabled={!canUserEdit}
+                    >
+                      {dataFetcher.state === 'submitting'
+                        ? 'กำลังบันทึก...'
+                        : 'บันทึก'}
+                    </button>
+                  ) : (
+                    <button disabled>บันทึกแล้ว</button>
+                  )}
+                  <button type="reset" disabled={!canUserEdit}>
                     ยกเลิก
                   </button>
                 </>
@@ -268,7 +318,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
                 fontWeight: 'bold',
                 width: 'max-content',
               }}
-              disabled={isDisabledAll}
+              disabled={!canUserEdit}
             >
               {deleteFetcher.state === 'submitting'
                 ? 'กำลังลบข้อมูล...'
@@ -308,4 +358,50 @@ const getTimezoneOffsetInISO = (date: Date): string => {
   const mm = (Math.abs(tz) % 60).toString().padStart(2, '0')
 
   return `${sign}${hh}:${mm}`
+}
+
+const isEqual = (form: FormData, data: Data): boolean => {
+  const formAdmittedAt = form.get('admittedAt')
+  const formAdmittedTz = form.get('admittedTzOffsetInISO')
+  const dataAdmittedAtDate = new Date(data?.admittedAt ?? Date.now())
+  if (
+    toLocaleDateTime(dataAdmittedAtDate) !== formAdmittedAt ||
+    getTimezoneOffsetInISO(dataAdmittedAtDate) !== formAdmittedTz
+  ) {
+    return true
+  }
+
+  const formPatientIds = form.getAll('patientId').join()
+  const dataPatientIds = data?.patients?.map((item) => item.id).join()
+  if (formPatientIds !== dataPatientIds) {
+    return true
+  }
+
+  const formNames = form.getAll('name').join()
+  const dataNames = data?.patients?.map((item) => item.name).join()
+  if (formNames !== dataNames) {
+    return true
+  }
+
+  const formZone = form.get('zone')
+  if (formZone !== data?.zone) {
+    return true
+  }
+
+  const formAddress = form.get('address')
+  if (formAddress !== data?.address) {
+    return true
+  }
+
+  const formLandmarkNote = form.get('landmarkNote')
+  if (formLandmarkNote !== data?.landmarkNote) {
+    return true
+  }
+
+  const formPhone = form.get('phone')
+  if (formPhone !== data?.phone) {
+    return true
+  }
+
+  return false
 }
