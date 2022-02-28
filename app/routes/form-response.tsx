@@ -1,5 +1,5 @@
 import { Link } from 'remix'
-import QRCode from 'react-qr-code'
+import QRCode from 'qrcode.react'
 
 const linkToGroup =
   'https://liff.line.me/1645278921-kWRPP32q/?accountId=510lxrso'
@@ -18,7 +18,6 @@ export default function FormResponseRoute() {
       }}
     >
       <h1 style={{ margin: 0 }}>
-        {' '}
         ท่านลงทะเบียนในขั้นตอน ระบุพิกัด ที่พัก สำเร็จ!!!
       </h1>
       <p style={{ width: '100%', margin: 0 }}>ขั้นตอนต่อไป โปรดทำตามขั้นตอน</p>
@@ -49,7 +48,7 @@ export default function FormResponseRoute() {
           15.00น. ทุกวัน
         </li>
       </ol>
-      <QRCode value={linkToGroup} />
+      <QRCode value={linkToGroup} size={196} />
       <p
         style={{
           margin: 0,
