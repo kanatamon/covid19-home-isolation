@@ -5,10 +5,9 @@ interface MapProps extends google.maps.MapOptions {
   style: { [key: string]: string }
   isRenderCenterMarker?: boolean
   onClick?: (e: google.maps.MapMouseEvent) => void
-  onIdle?: (map: google.maps.Map) => void
+  onIdle?: (markerLatLng: google.maps.LatLngLiteral | undefined) => void
   canInteract?: boolean
-  initialLatLng: { lat: number; lng: number }
-  initialZoom: number
+  userPreferences: google.maps.LatLngLiteral & { zoom: number }
 }
 
 export const Map: React.FC<MapProps> = ({
@@ -18,8 +17,7 @@ export const Map: React.FC<MapProps> = ({
   onIdle,
   children,
   style,
-  initialLatLng,
-  initialZoom,
+  userPreferences,
   ...options
 }) => {
   const ref = React.useRef<HTMLDivElement>(null)
@@ -47,8 +45,11 @@ export const Map: React.FC<MapProps> = ({
     if (ref.current && !map) {
       const newMap = new window.google.maps.Map(ref.current, {
         ...options,
-        center: initialLatLng,
-        zoom: initialZoom,
+        center: {
+          lat: userPreferences.lat,
+          lng: userPreferences.lng,
+        },
+        zoom: userPreferences.zoom,
       })
       setMap(newMap)
     }
@@ -57,7 +58,15 @@ export const Map: React.FC<MapProps> = ({
   React.useEffect(() => {
     marker?.setMap(map ?? null)
     setMarkerAtMapCenter()
-  }, [map, options?.zoom])
+  }, [map])
+
+  React.useEffect(() => {
+    map?.setOptions({
+      center: { ...userPreferences },
+      zoom: userPreferences.zoom,
+    })
+    setMarkerAtMapCenter()
+  }, [userPreferences])
 
   useDeepCompareEffectForMaps(() => {
     map?.setOptions(options)
@@ -70,7 +79,10 @@ export const Map: React.FC<MapProps> = ({
       )
 
       if (onIdle) {
-        map.addListener('idle', () => onIdle(map))
+        map.addListener('idle', () => {
+          const markerLatLng = marker?.getPosition()?.toJSON()
+          onIdle(markerLatLng)
+        })
       }
 
       if (isRenderCenterMarker) {
