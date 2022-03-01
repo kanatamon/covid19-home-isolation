@@ -7,7 +7,7 @@ import { HomeIsolationFormView } from '~/components/home-isolation-form-view'
 import { useGetCurrentPosition } from '~/hooks/useGetCurrentPosition'
 
 const INITIAL_ZOOM = 14
-const INITIAL_LAT_LNG = {
+const INITIAL_POSITION = {
   lat: 8.0294121,
   lng: 99.6502966,
 }
@@ -21,25 +21,29 @@ export default function Index() {
   const [editingMode, setEditingMode] = React.useState<EditingMode>(
     EditingMode.PinMap
   )
-  const getCurrentPosition = useGetCurrentPosition()
-  const [userMapPreferences, setUserMapPreferences] = React.useState<
-    google.maps.LatLngLiteral & { zoom: number }
-  >({
-    ...INITIAL_LAT_LNG,
+  const [userMapPreference, setUserMapPreference] = React.useState<{
+    center: google.maps.LatLngLiteral
+    zoom: number
+  }>({
+    center: INITIAL_POSITION,
     zoom: INITIAL_ZOOM,
   })
   const [markerLatLng, setMarkerLatLng] =
-    React.useState<google.maps.LatLngLiteral>(INITIAL_LAT_LNG)
+    React.useState<google.maps.LatLngLiteral>(INITIAL_POSITION)
 
-  const { position } = getCurrentPosition
+  const getCurrentPosition = useGetCurrentPosition()
+
   React.useEffect(
     function updateUserMapPreferencesWhenGetCurrentPositionSuccess() {
-      position && setUserMapPreferences({ ...position, zoom: 17 })
+      const { position } = getCurrentPosition
+      position && setUserMapPreference({ center: position, zoom: 17 })
     },
-    [position]
+    [getCurrentPosition.position]
   )
 
-  const onIdle = (markerLatLng: google.maps.LatLngLiteral | undefined) => {
+  const mapMarkerSettledHandler = (
+    markerLatLng: google.maps.LatLngLiteral | undefined
+  ) => {
     markerLatLng && setMarkerLatLng(markerLatLng)
   }
 
@@ -93,7 +97,7 @@ export default function Index() {
           disabled={getCurrentPosition.state === 'pending'}
         >
           {getCurrentPosition.state === 'pending'
-            ? 'กำลังค้นหา...'
+            ? 'กำลังระบุตำแหน่ง...'
             : 'ตำแหน่งปัจจุบัน'}
         </button>
         <div style={{ height: 24 }} />
@@ -131,15 +135,16 @@ export default function Index() {
         >
           <Map
             canInteract={canPinMap}
-            userPreferences={userMapPreferences}
-            onIdle={onIdle}
+            userPreference={userMapPreference}
             style={{ width: '100%', height: '100%' }}
             fullscreenControl={false}
             streetViewControl={false}
             mapTypeControl={false}
             keyboardShortcuts={false}
             zoomControl={false}
-            isRenderCenterMarker
+            // isRenderCenterMarker
+            onMarkerSettled={mapMarkerSettledHandler}
+            markerPosition={markerLatLng}
           />
         </Wrapper>
       </div>

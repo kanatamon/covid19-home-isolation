@@ -3,97 +3,106 @@ import { createCustomEqual } from 'fast-equals'
 
 interface MapProps extends google.maps.MapOptions {
   style: { [key: string]: string }
-  isRenderCenterMarker?: boolean
   onClick?: (e: google.maps.MapMouseEvent) => void
-  onIdle?: (markerLatLng: google.maps.LatLngLiteral | undefined) => void
+  markerPosition?: google.maps.LatLngLiteral
+  onMarkerSettled?: (
+    markerPosition: google.maps.LatLngLiteral | undefined
+  ) => void
   canInteract?: boolean
-  userPreferences: google.maps.LatLngLiteral & { zoom: number }
+  userPreference: { center: google.maps.LatLngLiteral; zoom: number }
 }
 
 export const Map: React.FC<MapProps> = ({
-  isRenderCenterMarker = false,
   canInteract = true,
   onClick,
-  onIdle,
+  markerPosition,
+  onMarkerSettled,
   children,
   style,
-  userPreferences,
+  userPreference,
   ...options
 }) => {
   const ref = React.useRef<HTMLDivElement>(null)
   const [map, setMap] = React.useState<google.maps.Map>()
   const [marker, setMarker] = React.useState<google.maps.Marker>()
 
-  React.useEffect(() => {
-    if (!isRenderCenterMarker) {
-      return
-    }
-
-    if (!marker) {
-      setMarker(new google.maps.Marker())
-    }
-
-    // remove marker from map on unmount
-    return () => {
-      if (marker) {
-        marker.setMap(null)
-      }
-    }
-  }, [marker, isRenderCenterMarker])
-
-  React.useEffect(() => {
-    if (ref.current && !map) {
-      const newMap = new window.google.maps.Map(ref.current, {
-        ...options,
-        center: {
-          lat: userPreferences.lat,
-          lng: userPreferences.lng,
-        },
-        zoom: userPreferences.zoom,
-      })
-      setMap(newMap)
-    }
-  }, [map])
-
-  React.useEffect(() => {
-    marker?.setMap(map ?? null)
-    setMarkerAtMapCenter()
-  }, [map])
-
-  React.useEffect(() => {
-    map?.setOptions({
-      center: { ...userPreferences },
-      zoom: userPreferences.zoom,
-    })
-    setMarkerAtMapCenter()
-  }, [userPreferences])
-
-  useDeepCompareEffectForMaps(() => {
-    map?.setOptions(options)
-  }, [map, options])
-
-  React.useEffect(() => {
-    if (map) {
-      ;['idle', 'drag'].forEach((eventName) =>
-        google.maps.event.clearListeners(map, eventName)
-      )
-
-      if (onIdle) {
-        map.addListener('idle', () => {
-          const markerLatLng = marker?.getPosition()?.toJSON()
-          onIdle(markerLatLng)
+  React.useEffect(
+    function manageMapExistence() {
+      if (ref.current && !map) {
+        const newMap = new window.google.maps.Map(ref.current, {
+          ...options,
+          ...userPreference,
         })
+        setMap(newMap)
+      }
+    },
+    [map]
+  )
+
+  useDeepCompareEffectForMaps(
+    function applyOptionsToMap() {
+      map?.setOptions(options)
+    },
+    [map, options]
+  )
+
+  React.useEffect(
+    function manageEventListeners() {
+      if (map) {
+        ;['drag'].forEach((eventName) =>
+          google.maps.event.clearListeners(map, eventName)
+        )
+
+        if (onMarkerSettled) {
+          map.addListener('drag', () => {
+            onMarkerSettled(map.getCenter()?.toJSON())
+          })
+        }
+      }
+    },
+    [map, onMarkerSettled]
+  )
+
+  React.useEffect(
+    function manageMarkerExistence() {
+      if (!marker && markerPosition) {
+        setMarker(new google.maps.Marker())
       }
 
-      if (isRenderCenterMarker) {
-        map.addListener('drag', setMarkerAtMapCenter)
+      // remove marker from map on unmount
+      return () => {
+        !markerPosition && marker?.setMap(null)
       }
-    }
-  }, [map, onIdle, isRenderCenterMarker])
+    },
+    [marker, markerPosition]
+  )
 
-  const setMarkerAtMapCenter = () => {
-    marker?.setPosition(map?.getCenter())
-  }
+  useDeepCompareEffectForMaps(
+    function bindMarkerToNewMapCenter() {
+      if (marker && map) {
+        marker.setMap(map)
+        onMarkerSettled?.(map.getCenter()?.toJSON())
+      }
+    },
+    [map]
+  )
+
+  React.useEffect(
+    function applyUserPreferenceToMap() {
+      map?.setOptions(userPreference)
+      onMarkerSettled?.(userPreference.center)
+    },
+    [userPreference]
+  )
+
+  React.useEffect(
+    function updateMarkerPositionOnMap() {
+      if (markerPosition && marker) {
+        marker.setPosition(markerPosition)
+      }
+    },
+    [markerPosition, marker]
+  )
 
   const smartInteractGuard = !canInteract ? (
     <div

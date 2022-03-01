@@ -25,6 +25,14 @@ export const loader: LoaderFunction = async ({ request }) => {
   return json<LoaderData>({ homeIsolationForms })
 }
 
+const USER_PREFERENCE = {
+  center: {
+    lat: 8.0294121,
+    lng: 99.6502966,
+  },
+  zoom: 13,
+}
+
 export default function AdminDashboardRoute() {
   const data = useLoaderData<LoaderData>()
 
@@ -82,11 +90,7 @@ export default function AdminDashboardRoute() {
           render={render}
         >
           <Map
-            initialLatLng={{
-              lat: 8.0294121,
-              lng: 99.6502966,
-            }}
-            initialZoom={13}
+            userPreference={USER_PREFERENCE}
             style={{ width: '100%', height: '100%' }}
             fullscreenControl={false}
             streetViewControl={false}
