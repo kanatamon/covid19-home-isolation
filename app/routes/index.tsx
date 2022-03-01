@@ -5,6 +5,7 @@ import { Status, Wrapper } from '@googlemaps/react-wrapper'
 import { Map } from '~/components/map'
 import { HomeIsolationFormView } from '~/components/home-isolation-form-view'
 import { useGetCurrentPosition } from '~/hooks/useGetCurrentPosition'
+import { json, LoaderFunction, useLoaderData } from 'remix'
 
 const INITIAL_ZOOM = 14
 const INITIAL_POSITION = {
@@ -17,7 +18,21 @@ enum EditingMode {
   EditForm,
 }
 
+type LoaderData = {
+  ENV: { GOOGLE_MAP_API_KEY: string }
+}
+
+export const loader: LoaderFunction = async () => {
+  return json<LoaderData>({
+    ENV: {
+      GOOGLE_MAP_API_KEY: process.env.GOOGLE_MAP_API_KEY ?? '',
+    },
+  })
+}
+
 export default function Index() {
+  const data = useLoaderData<LoaderData>()
+
   const [editingMode, setEditingMode] = React.useState<EditingMode>(
     EditingMode.PinMap
   )
@@ -129,10 +144,7 @@ export default function Index() {
           height: 'var(--height)',
         }}
       >
-        <Wrapper
-          apiKey={'AIzaSyBvzV8nKgqy1Ia3_gR3jJ1cv-F9d5J9Rzg'}
-          render={render}
-        >
+        <Wrapper apiKey={data.ENV.GOOGLE_MAP_API_KEY} render={render}>
           <Map
             canInteract={canPinMap}
             userPreference={userMapPreference}

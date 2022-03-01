@@ -10,6 +10,7 @@ import { HomeIsolationFormSmartView } from '~/components/home-isolation-form-sma
 
 type LoaderData = {
   homeIsolationForms: (HomeIsolationForm & { patients: Patient[] })[]
+  ENV: { GOOGLE_MAP_API_KEY: string }
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
@@ -22,7 +23,10 @@ export const loader: LoaderFunction = async ({ request }) => {
     orderBy: { admittedAt: 'desc' },
     take: 20,
   })
-  return json<LoaderData>({ homeIsolationForms })
+  return json<LoaderData>({
+    homeIsolationForms,
+    ENV: { GOOGLE_MAP_API_KEY: process.env.GOOGLE_MAP_API_KEY ?? '' },
+  })
 }
 
 const USER_PREFERENCE = {
@@ -35,6 +39,8 @@ const USER_PREFERENCE = {
 
 export default function AdminDashboardRoute() {
   const data = useLoaderData<LoaderData>()
+
+  // console.log(window.ENV)
 
   return (
     <div
@@ -85,10 +91,7 @@ export default function AdminDashboardRoute() {
         </ul>
       </div>
       <div style={{ flexGrow: 1 }}>
-        <Wrapper
-          apiKey={'AIzaSyBvzV8nKgqy1Ia3_gR3jJ1cv-F9d5J9Rzg'}
-          render={render}
-        >
+        <Wrapper render={render} apiKey={data.ENV.GOOGLE_MAP_API_KEY}>
           <Map
             userPreference={USER_PREFERENCE}
             style={{ width: '100%', height: '100%' }}
