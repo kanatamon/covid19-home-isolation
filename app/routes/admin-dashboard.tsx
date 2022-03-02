@@ -53,7 +53,7 @@ export default function AdminDashboardRoute() {
     >
       <div
         style={{
-          width: 'clamp(350px, 33%, 500px)',
+          width: 'clamp(500px, 33%, 900px)',
           height: '100%',
           overflow: 'auto',
           padding: 12,
