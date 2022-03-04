@@ -7,6 +7,7 @@ import { db } from '~/utils/db.server'
 import { requireAdminPermission } from '~/utils/session.server'
 import { Map } from '~/components/map'
 import { HomeIsolationFormSmartView } from '~/components/home-isolation-form-smart-view'
+import { calculateHealth } from '~/components/health-viz'
 
 type LoaderData = {
   homeIsolationForms: (HomeIsolationForm & { patients: Patient[] })[]
@@ -105,6 +106,7 @@ export default function AdminDashboardRoute() {
               <Marker
                 key={form.id}
                 position={{ lat: +form.lat, lng: +form.lng }}
+                admittedAt={new Date(form.admittedAt)}
               />
             ))}
           </Map>
@@ -118,7 +120,16 @@ const render = (status: Status) => {
   return <h1>{status}</h1>
 }
 
-const Marker: React.FC<google.maps.MarkerOptions> = (options) => {
+const PinIcon = {
+  path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+  width: 16,
+  height: 20,
+}
+
+const Marker: React.FC<google.maps.MarkerOptions & { admittedAt: Date }> = ({
+  admittedAt,
+  ...options
+}) => {
   const [marker, setMarker] = React.useState<google.maps.Marker>()
 
   React.useEffect(() => {
@@ -135,10 +146,21 @@ const Marker: React.FC<google.maps.MarkerOptions> = (options) => {
   }, [marker])
 
   React.useEffect(() => {
-    if (marker) {
-      marker.setOptions(options)
-    }
-  }, [marker, options])
+    const health = calculateHealth(admittedAt)
+
+    marker?.setOptions({
+      ...options,
+      icon: {
+        path: PinIcon.path,
+        anchor: new google.maps.Point(PinIcon.width / 2, PinIcon.height),
+        fillColor: health.color,
+        fillOpacity: 1,
+        strokeWeight: 1,
+        strokeColor: '#ffffff',
+        scale: 1.5,
+      },
+    })
+  }, [marker, options, admittedAt])
 
   return null
 }

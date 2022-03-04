@@ -1,6 +1,18 @@
 import * as React from 'react'
+import chroma from 'chroma-js'
 
 const MILLISECONDS_IN_A_DAY = 1000 * 3600 * 24
+const TREATMENT_DAYS = 10
+const HEALTH_SHADES = ['#f7797d', '#fbd786', '#c6ffdd']
+const healthScale = chroma.scale(HEALTH_SHADES)
+
+export const calculateHealth = (admittedAt: Date) => {
+  const timeDiff = new Date().getTime() - admittedAt.getTime()
+  const day = Math.floor(timeDiff / MILLISECONDS_IN_A_DAY)
+  const value = clamp(day, 0, TREATMENT_DAYS) / TREATMENT_DAYS
+
+  return { day, value, color: healthScale(value).hex() }
+}
 
 const clamp = (num: number, min: number, max: number) =>
   Math.min(Math.max(num, min), max)
@@ -9,9 +21,7 @@ export const HealthViz: React.FC<{
   admittedAt: Date
   style?: React.CSSProperties
 }> = ({ style, admittedAt }) => {
-  const timeDiff = new Date().getTime() - admittedAt.getTime()
-  const daysDiff = Math.floor(timeDiff / MILLISECONDS_IN_A_DAY)
-  const healthVal = clamp(daysDiff, 0, 10) / 10
+  const treatment = calculateHealth(admittedAt)
 
   const admittedAtDisplay = new Intl.DateTimeFormat('th', {
     dateStyle: 'medium',
@@ -22,17 +32,19 @@ export const HealthViz: React.FC<{
     <div style={{ ...style }}>
       <div
         style={{
+          // @ts-ignore
+          '--health-bg': `linear-gradient(90deg, ${HEALTH_SHADES.join(',')})`,
           width: '100%',
           height: '1em',
           borderRadius: '3px',
-          background: 'linear-gradient(90deg,#f7797d, #fbd786, #c6ffdd)',
+          background: 'var(--health-bg)',
         }}
       >
         <div
           style={{
             position: 'relative',
             marginLeft: 'auto',
-            width: `${(1 - healthVal) * 100}%`,
+            width: `${(1 - treatment.value) * 100}%`,
             height: '100%',
             backgroundColor: '#e1e4e8',
           }}
@@ -41,7 +53,7 @@ export const HealthViz: React.FC<{
             style={{
               // @ts-ignore
               '--size': '1.75em',
-              '--healthPct': `${healthVal * 100}%`,
+              '--healthPct': `${treatment.value * 100}%`,
               position: 'absolute',
               top: '50%',
               right: '100%',
@@ -52,12 +64,12 @@ export const HealthViz: React.FC<{
               display: 'grid',
               placeContent: 'center',
               fontWeight: 'bold',
-              background: 'linear-gradient(90deg,#f7797d, #fbd786, #c6ffdd)',
+              background: 'var(--health-bg)',
               backgroundSize: '1000% 100%',
               backgroundPosition: 'var(--healthPct)',
             }}
           >
-            {daysDiff}
+            {treatment.day}
           </span>
         </div>
       </div>
