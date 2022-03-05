@@ -11,19 +11,33 @@ type Data = HomeIsolationForm & {
 type Props = {
   action: string
   data: Data
+  isSpottedOnMap?: boolean
+  onMapBtnClick?: (formId: string) => any
 }
 
 export const HomeIsolationFormSmartView: React.FC<Props> = ({
   data,
   action,
+  onMapBtnClick,
+  isSpottedOnMap = false,
 }) => {
   const [isEditing, setIsEditing] = React.useState(false)
 
   const toggleIsEditing = () => setIsEditing((prev) => !prev)
 
+  const emitFormId = () => onMapBtnClick?.(data.id)
+
   return (
     <div>
-      <HomeIsolationFormListItem data={data} onEditBtnClick={toggleIsEditing} />
+      <HomeIsolationFormListItem
+        data={data}
+        onEditBtnClick={toggleIsEditing}
+        onMapBtnClick={emitFormId}
+        mapBtnStyle={{
+          backgroundColor: isSpottedOnMap ? 'black' : 'revert',
+          color: isSpottedOnMap ? 'white' : 'black',
+        }}
+      />
       {isEditing ? (
         <>
           <hr style={{ margin: '0.75em 0 1.5em' }} />

@@ -15,8 +15,12 @@ export const links: LinksFunction = () => [
   { href: datePickerStyles, rel: 'stylesheet' },
 ]
 
+type HomeIsolationFormData = HomeIsolationForm & {
+  patients: Patient[]
+}
+
 type LoaderData = {
-  homeIsolationForms: (HomeIsolationForm & { patients: Patient[] })[]
+  homeIsolationForms: HomeIsolationFormData[]
   ENV: { GOOGLE_MAP_API_KEY: string }
 }
 
@@ -47,7 +51,20 @@ const USER_PREFERENCE = {
 export default function AdminDashboardRoute() {
   const data = useLoaderData<LoaderData>()
 
-  // console.log(window.ENV)
+  const [spottedFormIds, setSpottedFormIds] = React.useState<Set<string>>(
+    new Set()
+  )
+
+  const onMapBtnClickHandler = (formId: string) => {
+    setSpottedFormIds((prev) => {
+      if (prev.has(formId)) {
+        prev.delete(formId)
+      } else {
+        prev.add(formId)
+      }
+      return new Set(prev)
+    })
+  }
 
   return (
     <div
@@ -91,6 +108,8 @@ export default function AdminDashboardRoute() {
                 <HomeIsolationFormSmartView
                   action={`/home-isolation-form/${form.id}`}
                   data={form}
+                  onMapBtnClick={onMapBtnClickHandler}
+                  isSpottedOnMap={spottedFormIds.has(form.id)}
                 />
               </li>
             )
@@ -112,7 +131,8 @@ export default function AdminDashboardRoute() {
               <Marker
                 key={form.id}
                 position={{ lat: +form.lat, lng: +form.lng }}
-                admittedAt={new Date(form.admittedAt)}
+                data={form}
+                isSpotted={spottedFormIds.has(form.id)}
               />
             ))}
           </Map>
@@ -132,11 +152,14 @@ const PinIcon = {
   height: 20,
 }
 
-const Marker: React.FC<google.maps.MarkerOptions & { admittedAt: Date }> = ({
-  admittedAt,
-  ...options
-}) => {
+const Marker: React.FC<
+  google.maps.MarkerOptions & {
+    data: HomeIsolationFormData
+    isSpotted?: boolean
+  }
+> = ({ data, isSpotted = false, ...options }) => {
   const [marker, setMarker] = React.useState<google.maps.Marker>()
+  const [infoWindow, setInfoWindow] = React.useState<google.maps.InfoWindow>()
 
   React.useEffect(() => {
     if (!marker) {
@@ -152,6 +175,20 @@ const Marker: React.FC<google.maps.MarkerOptions & { admittedAt: Date }> = ({
   }, [marker])
 
   React.useEffect(() => {
+    if (!infoWindow) {
+      setInfoWindow(new google.maps.InfoWindow())
+    }
+
+    // remove infoWindow element from DOM on unmount
+    return () => {
+      if (infoWindow) {
+        infoWindow.close()
+      }
+    }
+  }, [infoWindow])
+
+  React.useEffect(() => {
+    const admittedAt = new Date(data.admittedAt)
     const health = calculateHealth(admittedAt)
 
     marker?.setOptions({
@@ -166,7 +203,40 @@ const Marker: React.FC<google.maps.MarkerOptions & { admittedAt: Date }> = ({
         scale: 1.5,
       },
     })
-  }, [marker, options, admittedAt])
+  }, [marker, infoWindow, options, data])
+
+  React.useEffect(() => {
+    if (!isSpotted || !marker || !infoWindow) {
+      return
+    }
+
+    const patientsDisplay = `${data.patients?.[0].name}${
+      data.patients.length > 1 ? ` และอีก ${data.patients.length - 1} คน` : ''
+    }`
+
+    const admittedAt = new Date(data.admittedAt)
+    const displayAdmittedAt = new Intl.DateTimeFormat('th', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    }).format(admittedAt)
+
+    const content = [patientsDisplay, `เริ่มรักษาเมื่อ ${displayAdmittedAt}`]
+      .filter(Boolean)
+      .join('<br />')
+
+    infoWindow?.close()
+    infoWindow?.setContent(content)
+    infoWindow?.open(marker?.getMap(), marker)
+
+    marker?.setAnimation(google.maps.Animation.BOUNCE)
+
+    return () => {
+      if (isSpotted) {
+        infoWindow?.close()
+        marker?.setAnimation(null)
+      }
+    }
+  }, [isSpotted, data, infoWindow, marker])
 
   return null
 }

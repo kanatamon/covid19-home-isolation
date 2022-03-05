@@ -11,7 +11,9 @@ type Data = HomeIsolationForm & {
 export const HomeIsolationFormListItem: React.FC<{
   data: Data
   onEditBtnClick?: () => any
-}> = ({ data, onEditBtnClick }) => {
+  onMapBtnClick?: () => any
+  mapBtnStyle?: React.CSSProperties
+}> = ({ data, onEditBtnClick, onMapBtnClick, mapBtnStyle = {} }) => {
   const clipboard = useClipboard()
 
   const copyDataToClipboard = () => {
@@ -55,7 +57,9 @@ export const HomeIsolationFormListItem: React.FC<{
         admittedAt={new Date(data.admittedAt)}
       />
       <ActionsList style={{ width: 'max-content' }}>
-        <ActionBtn>Map</ActionBtn>
+        <ActionBtn onClick={onMapBtnClick} style={mapBtnStyle}>
+          Map
+        </ActionBtn>
         <ActionBtn onClick={onEditBtnClick}>Edit</ActionBtn>
         <ActionBtn
           onClick={copyDataToClipboard}
@@ -91,13 +95,15 @@ const ActionBtn: React.FC<
     React.ButtonHTMLAttributes<HTMLButtonElement>,
     HTMLButtonElement
   >
-> = ({ children, ...other }) => {
+> = ({ children, style, ...other }) => {
   return (
     <button
       {...other}
       style={{
+        ...style,
         fontSize: 'var(--btn-font-size)',
         minWidth: 'var(--btn-size)',
+        fontWeight: 'bold',
       }}
     >
       {children}
