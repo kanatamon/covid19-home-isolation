@@ -1,13 +1,19 @@
 import * as React from 'react'
 import { Status, Wrapper } from '@googlemaps/react-wrapper'
 import { HomeIsolationForm, Patient } from '@prisma/client'
-import { json, LoaderFunction, useLoaderData } from 'remix'
+import { json, LinksFunction, LoaderFunction, useLoaderData } from 'remix'
 
 import { db } from '~/utils/db.server'
 import { requireAdminPermission } from '~/utils/session.server'
 import { Map } from '~/components/map'
 import { HomeIsolationFormSmartView } from '~/components/home-isolation-form-smart-view'
 import { calculateHealth } from '~/components/health-viz'
+
+import datePickerStyles from 'react-datepicker/dist/react-datepicker.css'
+
+export const links: LinksFunction = () => [
+  { href: datePickerStyles, rel: 'stylesheet' },
+]
 
 type LoaderData = {
   homeIsolationForms: (HomeIsolationForm & { patients: Patient[] })[]

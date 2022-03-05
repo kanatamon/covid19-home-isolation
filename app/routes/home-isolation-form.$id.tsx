@@ -10,7 +10,6 @@ type ActionData = {
     lat: string | undefined
     lng: string | undefined
     admittedAt: string | undefined
-    admittedTzOffsetInISO: string | undefined
     zone: string | undefined
     address: string | undefined
     landmarkNote: string | undefined
@@ -22,7 +21,6 @@ type ActionData = {
     lat: number
     lng: number
     admittedAt: string
-    admittedTzOffsetInISO: string
     zone: string
     address: string
     landmarkNote: string
@@ -78,7 +76,6 @@ const updateHomeIsolationForm = async (
   const lat = Number(form.get('lat'))
   const lng = Number(form.get('lng'))
   const admittedAt = form.get('admittedAt')
-  const admittedTzOffsetInISO = form.get('admittedTzOffsetInISO')
   const zone = form.get('zone')
   const address = form.get('address')
   const landmarkNote = form.get('landmarkNote')
@@ -94,7 +91,6 @@ const updateHomeIsolationForm = async (
     typeof landmarkNote !== 'string' ||
     typeof phone !== 'string' ||
     typeof admittedAt !== 'string' ||
-    typeof admittedTzOffsetInISO !== 'string' ||
     !isStringArray(names) ||
     !isStringArray(patientIds) ||
     names.length !== patientIds.length
@@ -109,7 +105,6 @@ const updateHomeIsolationForm = async (
     lat: undefined,
     lng: undefined,
     admittedAt: undefined,
-    admittedTzOffsetInISO: undefined,
     zone: undefined,
     address: undefined,
     landmarkNote: undefined,
@@ -121,7 +116,6 @@ const updateHomeIsolationForm = async (
     lat,
     lng,
     admittedAt,
-    admittedTzOffsetInISO,
     zone,
     address,
     landmarkNote,
@@ -146,8 +140,6 @@ const updateHomeIsolationForm = async (
     })
   }
 
-  const admittedAtInISO = `${admittedAt}${admittedTzOffsetInISO}`
-
   const submittedPatients = Array.from({ length: names.length }).map(
     (_, idx) => ({
       id: patientIds[idx],
@@ -166,7 +158,7 @@ const updateHomeIsolationForm = async (
     data: {
       lat: new Prisma.Decimal(lat),
       lng: new Prisma.Decimal(lng),
-      admittedAt: new Date(admittedAtInISO),
+      admittedAt: new Date(admittedAt),
       zone,
       address,
       landmarkNote,

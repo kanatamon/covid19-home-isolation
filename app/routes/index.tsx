@@ -1,11 +1,17 @@
 import * as React from 'react'
 import { Prisma } from '@prisma/client'
+import { json, LinksFunction, LoaderFunction, useLoaderData } from 'remix'
 import { Status, Wrapper } from '@googlemaps/react-wrapper'
 
 import { Map } from '~/components/map'
 import { HomeIsolationFormView } from '~/components/home-isolation-form-view'
 import { useGetCurrentPosition } from '~/hooks/useGetCurrentPosition'
-import { json, LoaderFunction, useLoaderData } from 'remix'
+
+import datePickerStyles from 'react-datepicker/dist/react-datepicker.css'
+
+export const links: LinksFunction = () => [
+  { href: datePickerStyles, rel: 'stylesheet' },
+]
 
 const INITIAL_ZOOM = 14
 const INITIAL_POSITION = {

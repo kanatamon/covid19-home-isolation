@@ -1,6 +1,9 @@
 import * as React from 'react'
 import { HomeIsolationForm, Patient } from '@prisma/client'
 import { useFetcher } from 'remix'
+import DatePicker from 'react-datepicker'
+import { registerLocale } from 'react-datepicker'
+import th from 'date-fns/locale/th'
 
 const ZONES = ['รพ.ค่าย', 'มทบ.43', 'กองพล ร.5', 'บชร.4', 'พัน.ขส']
 
@@ -17,9 +20,14 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
   data,
   isEditable = false,
 }) => {
+  registerLocale('th', th)
+
   const dataFetcher = useFetcher()
   const deleteFetcher = useFetcher()
 
+  const [admittedAt, setAdmittedAt] = React.useState<Date | null>(
+    new Date(data?.admittedAt ?? Date.now())
+  )
   const [isNeedToUpdate, setIsNeedToUpdate] = React.useState(true)
   const [formPatientIds, setFormPatientIds] = React.useState<string[]>(() => {
     if (data.patients) {
@@ -116,26 +124,70 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             name="lng"
             value={data?.lng?.toString()}
           />
-
-          <input
-            type="hidden"
-            name="admittedTzOffsetInISO"
-            value={getTimezoneOffsetInISO(
-              new Date(data?.admittedAt ?? Date.now())
-            )}
-          />
         </div>
 
         <div>
           <label htmlFor="admittedAt">วันเวลาเริ่มเข้าการรักษา</label>
           <input
-            type="datetime-local"
-            defaultValue={toLocaleDateTime(
-              new Date(data?.admittedAt ?? Date.now())
-            )}
             name="admittedAt"
             id="admittedAt"
-            readOnly={!canUserEdit}
+            type="hidden"
+            value={admittedAt?.toISOString()}
+          />
+          <DatePicker
+            disabled={!canUserEdit}
+            locale={th}
+            selected={admittedAt}
+            maxDate={new Date()}
+            onChange={setAdmittedAt}
+            showTimeSelect
+            dateFormat="Pp"
+            customInput={<DisplayDateInputInBuddhistEra />}
+            renderCustomHeader={({
+              date,
+              decreaseMonth,
+              increaseMonth,
+              prevMonthButtonDisabled,
+              nextMonthButtonDisabled,
+            }) => (
+              <div
+                style={{
+                  margin: 10,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <button
+                  style={{
+                    width: 24,
+                    aspectRatio: '1 / 1',
+                    padding: 0,
+                  }}
+                  onClick={decreaseMonth}
+                  disabled={prevMonthButtonDisabled}
+                >
+                  {'<'}
+                </button>
+                <div style={{ flex: 1, fontWeight: 'bold' }}>
+                  {new Intl.DateTimeFormat('th', {
+                    month: 'long',
+                    year: 'numeric',
+                  }).format(date)}
+                </div>
+                <button
+                  style={{
+                    width: 24,
+                    aspectRatio: '1 / 1',
+                    padding: 0,
+                  }}
+                  onClick={increaseMonth}
+                  disabled={nextMonthButtonDisabled}
+                >
+                  {'>'}
+                </button>
+              </div>
+            )}
           />
         </div>
 
@@ -405,3 +457,25 @@ const isEqual = (form: FormData, data: Data): boolean => {
 
   return false
 }
+
+type DisplayDateInputInBuddhistEraProps = React.DetailedHTMLProps<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  HTMLInputElement
+>
+
+const DisplayDateInputInBuddhistEra = React.forwardRef<
+  HTMLInputElement,
+  DisplayDateInputInBuddhistEraProps
+>(({ value, ...other }, ref) => {
+  if (typeof value !== 'string') {
+    throw new Error(`Value must be string.`)
+  }
+  const customValue = value.replace(
+    /(\d{2}\/\d{2}\/)(\d{4})(.*)/,
+    (_str, ddmm, yyyy, rest) => {
+      const yyyyInBuddhist = Number(yyyy) + 543
+      return `${ddmm}${yyyyInBuddhist}${rest}`
+    }
+  )
+  return <input ref={ref} {...other} value={customValue} />
+})
