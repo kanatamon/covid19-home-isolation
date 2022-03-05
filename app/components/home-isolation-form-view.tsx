@@ -235,7 +235,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
         </div>
 
         <div>
-          <label htmlFor="landmarkNote">จุดสังเกตุ </label>
+          <label htmlFor="landmarkNote">ป้ายชื่อหน้าบ้าน/จุดสังเกตุ </label>
           <input
             defaultValue={data?.landmarkNote ?? undefined}
             name="landmarkNote"
