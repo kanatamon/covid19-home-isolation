@@ -12,7 +12,7 @@ import type { MetaFunction } from 'remix'
 import stylesUrl from '~/styles/index.css'
 
 export const meta: MetaFunction = () => {
-  return { title: 'ค่ายเทพสตีฯ' }
+  return { title: 'ค่ายเทพสตรีฯ' }
 }
 
 export const links: LinksFunction = () => {
