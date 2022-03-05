@@ -8,8 +8,12 @@ const healthScale = chroma.scale(HEALTH_SHADES)
 
 export const calculateHealth = (admittedAt: Date) => {
   const timeDiff = new Date().getTime() - admittedAt.getTime()
-  const day = Math.floor(timeDiff / MILLISECONDS_IN_A_DAY)
-  const value = clamp(day, 0, TREATMENT_DAYS) / TREATMENT_DAYS
+  const day = clamp(
+    Math.floor(timeDiff / MILLISECONDS_IN_A_DAY),
+    0,
+    TREATMENT_DAYS
+  )
+  const value = day / TREATMENT_DAYS
 
   return { day, value, color: healthScale(value).hex() }
 }
