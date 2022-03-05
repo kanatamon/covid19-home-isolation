@@ -48,21 +48,39 @@ const USER_PREFERENCE = {
   zoom: 13,
 }
 
+type Actions = 'add' | 'delete' | 'idle'
+
 export default function AdminDashboardRoute() {
   const data = useLoaderData<LoaderData>()
 
-  const [spottedFormIds, setSpottedFormIds] = React.useState<Set<string>>(
-    new Set()
-  )
+  const [spottedFormIds, setSpottedFormIds] = React.useState<{
+    items: Set<string>
+    lastAction: Actions
+    lastActedItemId: string | undefined
+  }>({
+    items: new Set(),
+    lastAction: 'idle',
+    lastActedItemId: undefined,
+  })
 
-  const onMapBtnClickHandler = (formId: string) => {
+  const onToggleSpottedFormIdHandler = (formId: string) => {
     setSpottedFormIds((prev) => {
-      if (prev.has(formId)) {
-        prev.delete(formId)
+      const { items } = prev
+      let lastAction: Actions | null = null
+
+      if (items.has(formId)) {
+        lastAction = 'delete'
+        items.delete(formId)
       } else {
-        prev.add(formId)
+        lastAction = 'add'
+        items.add(formId)
       }
-      return new Set(prev)
+
+      return {
+        items: new Set(prev.items),
+        lastAction,
+        lastActedItemId: formId,
+      }
     })
   }
 
@@ -103,13 +121,18 @@ export default function AdminDashboardRoute() {
                   border: '1px solid darkgrey',
                   padding: '24px 16px',
                   backgroundColor: 'white',
+                  outlineOffset: 3,
+                  outline:
+                    spottedFormIds.lastActedItemId === form.id
+                      ? '2px solid deeppink'
+                      : 0,
                 }}
               >
                 <HomeIsolationFormSmartView
                   action={`/home-isolation-form/${form.id}`}
                   data={form}
-                  onMapBtnClick={onMapBtnClickHandler}
-                  isSpottedOnMap={spottedFormIds.has(form.id)}
+                  onMapBtnClick={onToggleSpottedFormIdHandler}
+                  isSpottedOnMap={spottedFormIds.items.has(form.id)}
                 />
               </li>
             )
@@ -132,7 +155,8 @@ export default function AdminDashboardRoute() {
                 key={form.id}
                 position={{ lat: +form.lat, lng: +form.lng }}
                 data={form}
-                isSpotted={spottedFormIds.has(form.id)}
+                isSpotted={spottedFormIds.items.has(form.id)}
+                onClick={onToggleSpottedFormIdHandler}
               />
             ))}
           </Map>
@@ -156,8 +180,9 @@ const Marker: React.FC<
   google.maps.MarkerOptions & {
     data: HomeIsolationFormData
     isSpotted?: boolean
+    onClick?: (formId: string) => any
   }
-> = ({ data, isSpotted = false, ...options }) => {
+> = ({ data, isSpotted = false, onClick, ...options }) => {
   const [marker, setMarker] = React.useState<google.maps.Marker>()
   const [infoWindow, setInfoWindow] = React.useState<google.maps.InfoWindow>()
 
@@ -173,6 +198,22 @@ const Marker: React.FC<
       }
     }
   }, [marker])
+
+  React.useEffect(() => {
+    if (onClick && marker) {
+      marker.addListener('click', () => {
+        onClick(data.id)
+      })
+    }
+
+    return () => {
+      if (marker) {
+        ;['click'].forEach((eventName) =>
+          google.maps.event.clearListeners(marker, eventName)
+        )
+      }
+    }
+  }, [marker, data, onClick])
 
   React.useEffect(() => {
     if (!infoWindow) {
