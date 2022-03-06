@@ -49,7 +49,7 @@ export const HomeIsolationFormListItem: React.FC<{
         alignItems: 'flex-start',
       }}
     >
-      <div style={{ flexGrow: 1 }}>
+      <div style={{ flex: '1 0 0' }}>
         <p style={{ margin: 0 }}>{patientsDisplay}</p>
       </div>
       <HealthViz
