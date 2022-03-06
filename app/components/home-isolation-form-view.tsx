@@ -135,6 +135,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             value={admittedAt?.toISOString()}
           />
           <DatePicker
+            required
             disabled={!canUserEdit}
             locale={th}
             selected={admittedAt}
@@ -214,6 +215,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             // Then we introduce to use combination of `disabled` and
             // <input type="hidden" /> above instead.
             disabled={!canUserEdit}
+            required
           >
             {ZONES.map((zone) => (
               <option key={zone} value={zone}>
@@ -231,6 +233,8 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             id="address"
             placeholder="เช่น ***บชร4 ส2 ห้องที่ 2"
             readOnly={!canUserEdit}
+            required
+            maxLength={256}
           />
         </div>
 
@@ -242,6 +246,8 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             id="landmarkNote"
             placeholder="เช่น ป้ายชื่อห้องที่กักตัว"
             readOnly={!canUserEdit}
+            required
+            maxLength={256}
           />
         </div>
 
@@ -254,6 +260,8 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             name="phone"
             placeholder="เช่น 089-123-1234, 077-123-123"
             readOnly={!canUserEdit}
+            required
+            maxLength={64}
           />
         </div>
 
@@ -277,6 +285,8 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
                   name="name"
                   id={htmlId}
                   readOnly={!canUserEdit}
+                  required
+                  maxLength={256}
                 />
                 {isEditable ? (
                   <button
