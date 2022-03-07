@@ -7,7 +7,11 @@ import { db } from '~/utils/db.server'
 import { requireAdminPermission } from '~/utils/session.server'
 import { Map } from '~/components/map'
 import { HomeIsolationFormSmartView } from '~/components/home-isolation-form-smart-view'
-import { calculateHealth } from '~/components/health-viz'
+import {
+  calculateRecoveryDay,
+  calculateTreatmentScale,
+  hasRecoverySinceNow,
+} from '~/domain/treatment'
 
 import datePickerStyles from 'react-datepicker/dist/react-datepicker.css'
 
@@ -229,15 +233,14 @@ const Marker: React.FC<
   }, [infoWindow])
 
   React.useEffect(() => {
-    const admittedAt = new Date(data.admittedAt)
-    const health = calculateHealth(admittedAt)
+    const { color } = calculateTreatmentScale(data.treatmentDayCount)
 
     marker?.setOptions({
       ...options,
       icon: {
         path: PinIcon.path,
         anchor: new google.maps.Point(PinIcon.width / 2, PinIcon.height),
-        fillColor: health.color,
+        fillColor: color,
         fillOpacity: 1,
         strokeWeight: 1,
         strokeColor: '#ffffff',
@@ -255,13 +258,27 @@ const Marker: React.FC<
       data.patients.length > 1 ? ` และอีก ${data.patients.length - 1} คน` : ''
     }`
 
-    const admittedAt = new Date(data.admittedAt)
-    const displayAdmittedAt = new Intl.DateTimeFormat('th', {
+    const displayDateFormatter = new Intl.DateTimeFormat('th', {
       dateStyle: 'short',
       timeStyle: 'short',
-    }).format(admittedAt)
+    })
+    const admittedAt = new Date(data.admittedAt)
 
-    const content = [patientsDisplay, `เริ่มรักษาเมื่อ ${displayAdmittedAt}`]
+    const admittedAtDisplay = displayDateFormatter.format(admittedAt)
+    const admittedAtMessageDisplay = `เริ่มรักษาเมื่อ : ${admittedAtDisplay}`
+
+    const recoveryDateDisplay = displayDateFormatter.format(
+      calculateRecoveryDay(admittedAt)
+    )
+    const recoveryMessageDisplay = hasRecoverySinceNow(admittedAt)
+      ? `<span style="color: forestgreen;">สิ้นสุดการรักษาเมื่อ : ${recoveryDateDisplay}</span>`
+      : `<span style="color: red;">จะสิ้นสุดการรักษาเมื่อ : ${recoveryDateDisplay}</span>`
+
+    const content = [
+      patientsDisplay,
+      admittedAtMessageDisplay,
+      recoveryMessageDisplay,
+    ]
       .filter(Boolean)
       .join('<br />')
 

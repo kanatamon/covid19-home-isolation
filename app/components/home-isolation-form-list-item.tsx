@@ -55,6 +55,7 @@ export const HomeIsolationFormListItem: React.FC<{
       <HealthViz
         style={{ flexBasis: '33%' }}
         admittedAt={new Date(data.admittedAt)}
+        treatmentDayCount={data.treatmentDayCount}
       />
       <ActionsList style={{ width: 'max-content' }}>
         <ActionBtn onClick={onMapBtnClick} style={mapBtnStyle}>

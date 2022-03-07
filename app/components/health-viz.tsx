@@ -1,31 +1,13 @@
 import * as React from 'react'
-import chroma from 'chroma-js'
 
-const MILLISECONDS_IN_A_DAY = 1000 * 3600 * 24
-const TREATMENT_DAYS = 10
-const HEALTH_SHADES = ['#f7797d', '#fbd786', '#c6ffdd']
-const healthScale = chroma.scale(HEALTH_SHADES)
-
-export const calculateHealth = (admittedAt: Date) => {
-  const timeDiff = new Date().getTime() - admittedAt.getTime()
-  const day = clamp(
-    Math.floor(timeDiff / MILLISECONDS_IN_A_DAY),
-    0,
-    TREATMENT_DAYS
-  )
-  const value = day / TREATMENT_DAYS
-
-  return { day, value, color: healthScale(value).hex() }
-}
-
-const clamp = (num: number, min: number, max: number) =>
-  Math.min(Math.max(num, min), max)
+import { calculateTreatmentScale, HEALTH_SHADES } from '~/domain/treatment'
 
 export const HealthViz: React.FC<{
   admittedAt: Date
+  treatmentDayCount: number
   style?: React.CSSProperties
-}> = ({ style, admittedAt }) => {
-  const treatment = calculateHealth(admittedAt)
+}> = ({ style, admittedAt, treatmentDayCount }) => {
+  const treatmentScale = calculateTreatmentScale(treatmentDayCount)
 
   const admittedAtDisplay = new Intl.DateTimeFormat('th', {
     dateStyle: 'medium',
@@ -48,7 +30,7 @@ export const HealthViz: React.FC<{
           style={{
             position: 'relative',
             marginLeft: 'auto',
-            width: `${(1 - treatment.value) * 100}%`,
+            width: `${(1 - treatmentScale.value) * 100}%`,
             height: '100%',
             backgroundColor: '#e1e4e8',
           }}
@@ -57,7 +39,7 @@ export const HealthViz: React.FC<{
             style={{
               // @ts-ignore
               '--size': '1.75em',
-              '--healthPct': `${treatment.value * 100}%`,
+              '--healthPct': `${treatmentScale.value * 100}%`,
               position: 'absolute',
               top: '50%',
               right: '100%',
@@ -73,7 +55,7 @@ export const HealthViz: React.FC<{
               backgroundPosition: 'var(--healthPct)',
             }}
           >
-            {treatment.day}
+            {treatmentDayCount}
           </span>
         </div>
       </div>

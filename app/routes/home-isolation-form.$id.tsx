@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client'
 import { ActionFunction, json } from 'remix'
+import { calculateTreatmentDayCount } from '~/domain/treatment'
 import { db } from '~/utils/db.server'
 import { requireAdminPermission } from '~/utils/session.server'
 import { isStringArray } from '~/utils/type-validator'
@@ -151,6 +152,8 @@ const updateHomeIsolationForm = async (
     (savedPatient) => !patientIds.includes(savedPatient.id)
   )
 
+  const admittedAtDate = new Date(admittedAt)
+
   await db.homeIsolationForm.update({
     where: {
       id: formId,
@@ -158,7 +161,8 @@ const updateHomeIsolationForm = async (
     data: {
       lat: new Prisma.Decimal(lat),
       lng: new Prisma.Decimal(lng),
-      admittedAt: new Date(admittedAt),
+      admittedAt: admittedAtDate,
+      treatmentDayCount: calculateTreatmentDayCount(admittedAtDate),
       zone,
       address,
       landmarkNote,

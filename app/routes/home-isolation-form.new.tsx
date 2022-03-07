@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client'
 import { type ActionFunction, json, redirect } from 'remix'
+import { calculateTreatmentDayCount } from '~/domain/treatment'
 import { db } from '~/utils/db.server'
 import { isStringArray } from '../utils/type-validator'
 
@@ -79,11 +80,13 @@ export const action: ActionFunction = async ({ request }) => {
     return badRequest({ fieldErrors, fields })
   }
 
+  const admittedAtDate = new Date(admittedAt)
   await db.homeIsolationForm.create({
     data: {
       lat: new Prisma.Decimal(lat),
       lng: new Prisma.Decimal(lng),
-      admittedAt: new Date(admittedAt),
+      admittedAt: admittedAtDate,
+      treatmentDayCount: calculateTreatmentDayCount(admittedAtDate),
       zone,
       address,
       landmarkNote: !!landmarkNote ? landmarkNote : null,
