@@ -1,11 +1,13 @@
 import * as React from 'react'
 import { Prisma } from '@prisma/client'
-import { json, LinksFunction, LoaderFunction, useLoaderData } from 'remix'
+import { LinksFunction } from 'remix'
 import { Status, Wrapper } from '@googlemaps/react-wrapper'
+import { ClientOnly } from 'remix-utils'
 
 import { Map } from '~/components/map'
 import { HomeIsolationFormView } from '~/components/home-isolation-form-view'
 import { useGetCurrentPosition } from '~/hooks/useGetCurrentPosition'
+import { useHasMounted } from '~/hooks/useHasMounted'
 
 import datePickerStyles from 'react-datepicker/dist/react-datepicker.css'
 
@@ -24,21 +26,7 @@ enum EditingMode {
   EditForm,
 }
 
-type LoaderData = {
-  ENV: { GOOGLE_MAP_API_KEY: string }
-}
-
-export const loader: LoaderFunction = async () => {
-  return json<LoaderData>({
-    ENV: {
-      GOOGLE_MAP_API_KEY: process.env.GOOGLE_MAP_API_KEY ?? '',
-    },
-  })
-}
-
 export default function Index() {
-  const data = useLoaderData<LoaderData>()
-
   const [editingMode, setEditingMode] = React.useState<EditingMode>(
     EditingMode.PinMap
   )
@@ -60,6 +48,16 @@ export default function Index() {
       position && setUserMapPreference({ center: position, zoom: 17 })
     },
     [getCurrentPosition.position]
+  )
+
+  const hasMounted = useHasMounted()
+  React.useEffect(
+    function () {
+      if (!hasMounted) {
+        return
+      }
+    },
+    [hasMounted]
   )
 
   const mapMarkerSettledHandler = (
@@ -150,21 +148,25 @@ export default function Index() {
           height: 'var(--height)',
         }}
       >
-        <Wrapper apiKey={data.ENV.GOOGLE_MAP_API_KEY} render={render}>
-          <Map
-            canInteract={canPinMap}
-            userPreference={userMapPreference}
-            style={{ width: '100%', height: '100%' }}
-            fullscreenControl={false}
-            streetViewControl={false}
-            mapTypeControl={false}
-            keyboardShortcuts={false}
-            zoomControl={false}
-            // isRenderCenterMarker
-            onMarkerSettled={mapMarkerSettledHandler}
-            markerPosition={markerLatLng}
-          />
-        </Wrapper>
+        <ClientOnly>
+          {() => (
+            <Wrapper apiKey={window.ENV.GOOGLE_MAP_API_KEY} render={render}>
+              <Map
+                canInteract={canPinMap}
+                userPreference={userMapPreference}
+                style={{ width: '100%', height: '100%' }}
+                fullscreenControl={false}
+                streetViewControl={false}
+                mapTypeControl={false}
+                keyboardShortcuts={false}
+                zoomControl={false}
+                // isRenderCenterMarker
+                onMarkerSettled={mapMarkerSettledHandler}
+                markerPosition={markerLatLng}
+              />
+            </Wrapper>
+          )}
+        </ClientOnly>
       </div>
       <div
         style={{
@@ -183,5 +185,5 @@ export default function Index() {
 }
 
 const render = (status: Status) => {
-  return <h1>{status}</h1>
+  return <div>{status}</div>
 }

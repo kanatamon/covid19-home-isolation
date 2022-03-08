@@ -14,6 +14,7 @@ import {
 } from '~/domain/treatment'
 
 import datePickerStyles from 'react-datepicker/dist/react-datepicker.css'
+import { ClientOnly } from 'remix-utils'
 
 export const links: LinksFunction = () => [
   { href: datePickerStyles, rel: 'stylesheet' },
@@ -25,7 +26,6 @@ type HomeIsolationFormData = HomeIsolationForm & {
 
 type LoaderData = {
   homeIsolationForms: HomeIsolationFormData[]
-  ENV: { GOOGLE_MAP_API_KEY: string }
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
@@ -40,7 +40,6 @@ export const loader: LoaderFunction = async ({ request }) => {
   })
   return json<LoaderData>({
     homeIsolationForms,
-    ENV: { GOOGLE_MAP_API_KEY: process.env.GOOGLE_MAP_API_KEY ?? '' },
   })
 }
 
@@ -144,34 +143,38 @@ export default function AdminDashboardRoute() {
         </ul>
       </div>
       <div style={{ flexGrow: 1 }}>
-        <Wrapper render={render} apiKey={data.ENV.GOOGLE_MAP_API_KEY}>
-          <Map
-            userPreference={USER_PREFERENCE}
-            style={{ width: '100%', height: '100%' }}
-            fullscreenControl={false}
-            streetViewControl={false}
-            mapTypeControl={false}
-            keyboardShortcuts={false}
-            zoomControl={false}
-          >
-            {data.homeIsolationForms.map((form) => (
-              <Marker
-                key={form.id}
-                position={{ lat: +form.lat, lng: +form.lng }}
-                data={form}
-                isSpotted={spottedFormIds.items.has(form.id)}
-                onClick={onToggleSpottedFormIdHandler}
-              />
-            ))}
-          </Map>
-        </Wrapper>
+        <ClientOnly>
+          {() => (
+            <Wrapper render={render} apiKey={window.ENV.GOOGLE_MAP_API_KEY}>
+              <Map
+                userPreference={USER_PREFERENCE}
+                style={{ width: '100%', height: '100%' }}
+                fullscreenControl={false}
+                streetViewControl={false}
+                mapTypeControl={false}
+                keyboardShortcuts={false}
+                zoomControl={false}
+              >
+                {data.homeIsolationForms.map((form) => (
+                  <Marker
+                    key={form.id}
+                    position={{ lat: +form.lat, lng: +form.lng }}
+                    data={form}
+                    isSpotted={spottedFormIds.items.has(form.id)}
+                    onClick={onToggleSpottedFormIdHandler}
+                  />
+                ))}
+              </Map>
+            </Wrapper>
+          )}
+        </ClientOnly>
       </div>
     </div>
   )
 }
 
 const render = (status: Status) => {
-  return <h1>{status}</h1>
+  return <div>{status}</div>
 }
 
 const PinIcon = {

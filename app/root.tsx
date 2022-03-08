@@ -1,13 +1,16 @@
 import {
+  type LinksFunction,
+  type LoaderFunction,
+  type MetaFunction,
+  json,
   Links,
-  LinksFunction,
   LiveReload,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from 'remix'
-import type { MetaFunction } from 'remix'
 
 import stylesUrl from '~/styles/index.css'
 
@@ -30,7 +33,28 @@ export const links: LinksFunction = () => {
     },
   ]
 }
+
+type ENV = {
+  GOOGLE_MAP_API_KEY: string
+}
+
+declare global {
+  interface Window {
+    ENV: ENV
+  }
+}
+
+export const loader: LoaderFunction = async () => {
+  return json<{ ENV: ENV }>({
+    ENV: {
+      GOOGLE_MAP_API_KEY: process.env.GOOGLE_MAP_API_KEY ?? '',
+    },
+  })
+}
+
 export default function App() {
+  const data = useLoaderData()
+
   return (
     <html lang="en">
       <head>
@@ -41,6 +65,11 @@ export default function App() {
       </head>
       <body>
         <Outlet />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.ENV = ${JSON.stringify(data.ENV)}`,
+          }}
+        />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
