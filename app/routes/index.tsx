@@ -1,13 +1,13 @@
 import * as React from 'react'
-import { Prisma } from '@prisma/client'
 import { LinksFunction } from 'remix'
-import { Status, Wrapper } from '@googlemaps/react-wrapper'
 import { ClientOnly } from 'remix-utils'
+import { Patient, Prisma } from '@prisma/client'
+import { Status, Wrapper } from '@googlemaps/react-wrapper'
 
 import { Map } from '~/components/map'
 import { HomeIsolationFormView } from '~/components/home-isolation-form-view'
 import { useGetCurrentPosition } from '~/hooks/useGetCurrentPosition'
-import { useHasMounted } from '~/hooks/useHasMounted'
+import { useGetLineProfile } from '~/hooks/useLineLiff'
 
 import datePickerStyles from 'react-datepicker/dist/react-datepicker.css'
 
@@ -26,6 +26,8 @@ enum EditingMode {
   EditForm,
 }
 
+type PatientsEditorData = Omit<Patient, 'formOwnerId'>[]
+
 export default function Index() {
   const [editingMode, setEditingMode] = React.useState<EditingMode>(
     EditingMode.PinMap
@@ -39,8 +41,30 @@ export default function Index() {
   })
   const [markerLatLng, setMarkerLatLng] =
     React.useState<google.maps.LatLngLiteral>(INITIAL_POSITION)
+  const [patientsEditorData, setPatientsEditorData] =
+    React.useState<PatientsEditorData>(() => {
+      return [{ id: 'new', name: '' }]
+    })
 
+  const getLineProfile = useGetLineProfile()
   const getCurrentPosition = useGetCurrentPosition()
+
+  React.useEffect(
+    function useLineProfileNameAsDefaultPatients() {
+      const { profile } = getLineProfile
+      if (!profile) {
+        return
+      }
+
+      setPatientsEditorData((prev) => [
+        {
+          id: profile.userId,
+          name: profile.displayName,
+        },
+      ])
+    },
+    [getLineProfile.profile]
+  )
 
   React.useEffect(
     function updateUserMapPreferencesWhenGetCurrentPositionSuccess() {
@@ -50,83 +74,71 @@ export default function Index() {
     [getCurrentPosition.position]
   )
 
-  const hasMounted = useHasMounted()
-  React.useEffect(
-    function () {
-      if (!hasMounted) {
-        return
-      }
-    },
-    [hasMounted]
-  )
-
   const mapMarkerSettledHandler = (
     markerLatLng: google.maps.LatLngLiteral | undefined
   ) => {
     markerLatLng && setMarkerLatLng(markerLatLng)
   }
 
-  // const geolocationPlace = (
-  //   <p
-  //     style={{
-  //       backgroundColor: 'gainsboro',
-  //       padding: '12px 16px',
-  //       margin: 0,
-  //     }}
-  //   >
-  //     TODO: Add the nearest place from geolocation
-  //   </p>
-  // )
+  let action = null
 
-  let editor = null
+  if (getLineProfile.shouldLoginManually) {
+    action = (
+      <button onClick={getLineProfile.login}>เข้าสู่ระบบด้วย LINE</button>
+    )
+  } else {
+    const { profile } = getLineProfile
+    const data = {
+      lineId: profile?.userId,
+      lineDisplayName: profile?.displayName,
+      linePictureUrl: profile?.pictureUrl,
+      lat: new Prisma.Decimal(markerLatLng.lat),
+      lng: new Prisma.Decimal(markerLatLng.lng),
+      patients: patientsEditorData,
+    }
 
-  if (editingMode === EditingMode.EditForm) {
-    editor = (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 32,
-        }}
-      >
-        <div>
-          {/* {geolocationPlace}
-          <div style={{ height: 24 }} /> */}
-          <button onClick={() => setEditingMode(EditingMode.PinMap)}>
-            เปลี่ยนพิกัด
+    action = (
+      <>
+        <div
+          style={{
+            display: editingMode === EditingMode.EditForm ? 'flex' : 'none',
+            flexDirection: 'column',
+            gap: 32,
+          }}
+        >
+          <div>
+            <button onClick={() => setEditingMode(EditingMode.PinMap)}>
+              เปลี่ยนพิกัด
+            </button>
+          </div>
+          <HomeIsolationFormView
+            action="/home-isolation-form/new"
+            data={data}
+            isEditable
+          />
+        </div>
+        <div
+          style={{
+            display: editingMode === EditingMode.PinMap ? 'block' : 'none',
+          }}
+        >
+          <button
+            onClick={getCurrentPosition.fetch}
+            disabled={getCurrentPosition.state === 'pending'}
+          >
+            {getCurrentPosition.state === 'pending'
+              ? 'กำลังระบุตำแหน่ง...'
+              : 'ตำแหน่งปัจจุบัน'}
+          </button>
+          <div style={{ height: 24 }} />
+          <button
+            className="primary-btn"
+            onClick={() => setEditingMode(EditingMode.EditForm)}
+          >
+            ยืนยันพิกัด
           </button>
         </div>
-        <HomeIsolationFormView
-          action="/home-isolation-form/new"
-          data={{
-            lat: new Prisma.Decimal(markerLatLng.lat),
-            lng: new Prisma.Decimal(markerLatLng.lng),
-          }}
-          isEditable
-        />
-      </div>
-    )
-  } else if (editingMode === EditingMode.PinMap) {
-    editor = (
-      <div>
-        {/* {geolocationPlace}
-        <div style={{ height: 24 }} /> */}
-        <button
-          onClick={getCurrentPosition.fetch}
-          disabled={getCurrentPosition.state === 'pending'}
-        >
-          {getCurrentPosition.state === 'pending'
-            ? 'กำลังระบุตำแหน่ง...'
-            : 'ตำแหน่งปัจจุบัน'}
-        </button>
-        <div style={{ height: 24 }} />
-        <button
-          className="primary-btn"
-          onClick={() => setEditingMode(EditingMode.EditForm)}
-        >
-          ยืนยันพิกัด
-        </button>
-      </div>
+      </>
     )
   }
 
@@ -160,7 +172,6 @@ export default function Index() {
                 mapTypeControl={false}
                 keyboardShortcuts={false}
                 zoomControl={false}
-                // isRenderCenterMarker
                 onMarkerSettled={mapMarkerSettledHandler}
                 markerPosition={markerLatLng}
               />
@@ -178,7 +189,7 @@ export default function Index() {
           overflow: 'auto',
         }}
       >
-        {editor}
+        {action}
       </div>
     </div>
   )

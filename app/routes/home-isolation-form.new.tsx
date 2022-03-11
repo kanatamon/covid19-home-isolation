@@ -7,6 +7,9 @@ import { isStringArray } from '../utils/type-validator'
 type ActionData = {
   formError?: string
   fieldErrors?: {
+    lineId: string | undefined
+    lineDisplayName: string | undefined
+    linePictureUrl: string | undefined
     lat: string | undefined
     lng: string | undefined
     admittedAt: string | undefined
@@ -17,6 +20,9 @@ type ActionData = {
     names: string | undefined
   }
   fields?: {
+    lineId: string
+    lineDisplayName: string
+    linePictureUrl: string
     lat: number
     lng: number
     admittedAt: string
@@ -31,6 +37,9 @@ type ActionData = {
 export const action: ActionFunction = async ({ request }) => {
   const form = await request.formData()
 
+  const lineId = form.get('lineId')
+  const lineDisplayName = form.get('lineDisplayName')
+  const linePictureUrl = form.get('linePictureUrl')
   const lat = Number(form.get('lat'))
   const lng = Number(form.get('lng'))
   const admittedAt = form.get('admittedAt')
@@ -41,6 +50,9 @@ export const action: ActionFunction = async ({ request }) => {
   const names = form.getAll('name')
 
   if (
+    typeof lineId !== 'string' ||
+    typeof lineDisplayName !== 'string' ||
+    typeof linePictureUrl !== 'string' ||
     Number.isNaN(lat) ||
     Number.isNaN(lng) ||
     typeof zone !== 'string' ||
@@ -57,6 +69,9 @@ export const action: ActionFunction = async ({ request }) => {
 
   // TODO: validate fields
   const fieldErrors = {
+    lineId: undefined,
+    lineDisplayName: undefined,
+    linePictureUrl: undefined,
     lat: undefined,
     lng: undefined,
     admittedAt: undefined,
@@ -67,6 +82,9 @@ export const action: ActionFunction = async ({ request }) => {
     names: undefined,
   }
   const fields = {
+    lineId,
+    lineDisplayName,
+    linePictureUrl,
     lat,
     lng,
     admittedAt,
@@ -83,6 +101,9 @@ export const action: ActionFunction = async ({ request }) => {
   const admittedAtDate = new Date(admittedAt)
   await db.homeIsolationForm.create({
     data: {
+      lineId,
+      lineDisplayName,
+      linePictureUrl,
       lat: new Prisma.Decimal(lat),
       lng: new Prisma.Decimal(lng),
       admittedAt: admittedAtDate,

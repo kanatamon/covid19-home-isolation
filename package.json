@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@googlemaps/react-wrapper": "^1.1.25",
+    "@line/liff": "^2.18.2",
     "@netlify/functions": "^0.10.0",
     "@prisma/client": "^3.10.0",
     "@remix-run/netlify": "^1.2.2",

@@ -2,12 +2,13 @@ import * as React from 'react'
 import { HomeIsolationForm, Patient } from '@prisma/client'
 import { useFetcher } from 'remix'
 import DatePicker from 'react-datepicker'
-import { registerLocale } from 'react-datepicker'
 import th from 'date-fns/locale/th'
 
 const ZONES = ['รพ.ค่าย', 'มทบ.43', 'กองพล ร.5', 'บชร.4', 'พัน.ขส']
 
-type Data = Partial<HomeIsolationForm & { patients: Patient[] }>
+type PatientWithoutOwnerData = Omit<Patient, 'formOwnerId'>
+
+type Data = Partial<HomeIsolationForm & { patients: PatientWithoutOwnerData[] }>
 
 export type HomeIsolationFromViewProps = {
   action: string
@@ -20,8 +21,6 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
   data,
   isEditable = false,
 }) => {
-  registerLocale('th', th)
-
   const dataFetcher = useFetcher()
   const deleteFetcher = useFetcher()
 
@@ -31,7 +30,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
   const [isNeedToUpdate, setIsNeedToUpdate] = React.useState(true)
   const [formPatientIds, setFormPatientIds] = React.useState<string[]>(() => {
     if (data.patients) {
-      return data.patients.map((patient) => patient.id)
+      return data.patients.map((patient) => patient.id ?? genId())
     }
     return [genId()]
   })
@@ -49,7 +48,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
   React.useEffect(
     function syncPatientIdsOnFormIdsToData() {
       if (data?.patients) {
-        setFormPatientIds(data.patients.map((patient) => patient.id))
+        setFormPatientIds(data.patients.map((patient) => patient.id ?? genId()))
       }
     },
     [data?.patients]
@@ -57,7 +56,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
 
   React.useEffect(() => {
     watchFormChangedHandler()
-  }, [data, formPatientIds])
+  }, [data, formPatientIds, admittedAt])
 
   const addNewPatient = () => {
     setFormPatientIds((prev) => [...prev, genId()])
@@ -68,7 +67,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
   }
   const formResetHandler = () => {
     if (data?.patients) {
-      setFormPatientIds(data.patients.map((item) => item.id))
+      setFormPatientIds(data.patients.map((item) => item?.id ?? genId()))
     }
   }
   /**
@@ -123,6 +122,24 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
             id="lng"
             name="lng"
             value={data?.lng?.toString()}
+          />
+          <input
+            type="hidden"
+            id="lineId"
+            name="lineId"
+            value={data?.lineId ?? ''}
+          />
+          <input
+            type="hidden"
+            id="lineDisplayName"
+            name="lineDisplayName"
+            value={data?.lineDisplayName ?? ''}
+          />
+          <input
+            type="hidden"
+            id="linePictureUrl"
+            name="linePictureUrl"
+            value={data?.linePictureUrl ?? ''}
           />
         </div>
 
@@ -265,23 +282,19 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
           />
         </div>
 
-        {formPatientIds.map((serverOrClientPatientId, idx) => {
+        {formPatientIds.map((formPatientId, idx) => {
           const noDisplay = idx + 1
           const htmlId = `name[${idx}]`
-          const serverPatient = data?.patients?.find(
-            (patient) => patient.id === serverOrClientPatientId
+          const patientInData = data?.patients?.find(
+            (patient) => patient.id === formPatientId
           )
           return (
-            <div key={serverOrClientPatientId}>
+            <div key={formPatientId}>
               <label htmlFor={htmlId}>ชื่อ-สกุล ผู้ป่วยคนที่ {noDisplay}</label>
               <div style={{ display: 'flex', gap: 8 }}>
+                <input type="hidden" name="patientId" value={formPatientId} />
                 <input
-                  type="hidden"
-                  name="patientId"
-                  value={serverPatient?.id ?? serverOrClientPatientId}
-                />
-                <input
-                  defaultValue={serverPatient?.name}
+                  defaultValue={patientInData?.name}
                   name="name"
                   id={htmlId}
                   readOnly={!canUserEdit}
@@ -293,7 +306,7 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
                     style={{ width: 44 }}
                     onClick={(event) => {
                       event.preventDefault()
-                      deletePatient(serverOrClientPatientId)
+                      deletePatient(formPatientId)
                     }}
                     disabled={!canUserEdit}
                   >
@@ -393,42 +406,20 @@ export const HomeIsolationFormView: React.FC<HomeIsolationFromViewProps> = ({
   )
 }
 
-const initialId = '0'
+let counterId = 0
 
 const genId = (isInitial: boolean = false): string => {
-  return isInitial ? initialId : Date.now().toString()
-}
-
-const toLocaleDateTime = (date: Date): string => {
-  const [month, day, year] = date.toLocaleDateString().split('/')
-  const yyyy = year.padStart(4, '0')
-  const MM = month.padStart(2, '0')
-  const dd = day.padStart(2, '0')
-
-  const hh = date.getHours().toString().padStart(2, '0')
-  const mm = date.getMinutes().toString().padStart(2, '0')
-
-  return `${yyyy}-${MM}-${dd}T${hh}:${mm}`
-}
-
-const getTimezoneOffsetInISO = (date: Date): string => {
-  const tz = date.getTimezoneOffset()
-  const sign = tz > 0 ? '-' : '+'
-  const hh = Math.floor(Math.abs(tz) / 60)
-    .toString()
-    .padStart(2, '0')
-  const mm = (Math.abs(tz) % 60).toString().padStart(2, '0')
-
-  return `${sign}${hh}:${mm}`
+  return isInitial ? counterId.toString() : (++counterId).toString()
 }
 
 const isEqual = (form: FormData, data: Data): boolean => {
   const formAdmittedAt = form.get('admittedAt')
-  const formAdmittedTz = form.get('admittedTzOffsetInISO')
   const dataAdmittedAtDate = new Date(data?.admittedAt ?? Date.now())
+  console.log(formAdmittedAt)
+  console.log(dataAdmittedAtDate)
   if (
-    toLocaleDateTime(dataAdmittedAtDate) !== formAdmittedAt ||
-    getTimezoneOffsetInISO(dataAdmittedAtDate) !== formAdmittedTz
+    typeof formAdmittedAt !== 'string' ||
+    new Date(formAdmittedAt).toISOString() !== dataAdmittedAtDate.toISOString()
   ) {
     return true
   }

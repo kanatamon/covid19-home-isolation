@@ -36,6 +36,7 @@ export const links: LinksFunction = () => {
 
 type ENV = {
   GOOGLE_MAP_API_KEY: string
+  LIFF_ID: string
 }
 
 declare global {
@@ -48,6 +49,7 @@ export const loader: LoaderFunction = async () => {
   return json<{ ENV: ENV }>({
     ENV: {
       GOOGLE_MAP_API_KEY: process.env.GOOGLE_MAP_API_KEY ?? '',
+      LIFF_ID: process.env.LIFF_ID ?? '',
     },
   })
 }

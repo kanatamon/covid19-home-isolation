@@ -23,6 +23,9 @@ model HomeIsolationForm {
   landmarkNote      String?
   phone             String
   patients          Patient[]
+  lineId            String?
+  lineDisplayName   String?
+  linePictureUrl    String?
 }
 
 model Patient {
