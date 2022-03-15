@@ -1,11 +1,14 @@
 import * as React from 'react'
 import { HomeIsolationForm, Patient } from '@prisma/client'
 
-import { HomeIsolationFormView } from '~/components/home-isolation-form-view'
+import {
+  HomeIsolationFormEditor,
+  useHomeIsolationFormValues,
+} from '~/components/home-isolation-form-editor'
 import { HomeIsolationFormListItem } from '~/components/home-isolation-form-list-item'
 
 type Data = HomeIsolationForm & {
-  patients: Patient[]
+  patients: Omit<Patient, 'formOwnerId'>[]
 }
 
 type Props = {
@@ -23,6 +26,10 @@ export const HomeIsolationFormSmartView: React.FC<Props> = ({
 }) => {
   const [isEditing, setIsEditing] = React.useState(false)
 
+  const methods = useHomeIsolationFormValues({
+    // @ts-ignore
+    defaultValues: data,
+  })
   const toggleIsEditing = () => setIsEditing((prev) => !prev)
 
   const emitFormId = () => onMapBtnClick?.(data.id)
@@ -51,7 +58,7 @@ export const HomeIsolationFormSmartView: React.FC<Props> = ({
             TODO: Add the nearest place from geolocation
           </p>
           <div style={{ height: '1.5em' }} />
-          <HomeIsolationFormView action={action} data={data} isEditable />
+          <HomeIsolationFormEditor methods={methods} />
         </>
       ) : null}
     </div>

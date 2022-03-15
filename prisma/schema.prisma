@@ -16,11 +16,11 @@ model HomeIsolationForm {
   updatedAt         DateTime  @updatedAt
   admittedAt        DateTime  @default(now())
   treatmentDayCount Int       @default(0) @db.SmallInt
-  lat               Decimal
-  lng               Decimal
+  lat               Decimal?
+  lng               Decimal?
   zone              String
   address           String
-  landmarkNote      String?
+  landmarkNote      String
   phone             String
   patients          Patient[]
   lineId            String?

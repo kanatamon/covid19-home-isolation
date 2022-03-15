@@ -1,3 +1,13 @@
+:root {
+  --primary-hs: 104 13%;
+  --primary-color: hsl(var(--primary-hs) 52%);
+  --primary-light: hsl(var(--primary-hs) 72%);
+
+  --inputBorderRadius: 4px;
+  --inputBorder: 1px solid #aeaeae;
+  --inputBgColor: white;
+}
+
 html,
 body,
 #root {
@@ -38,12 +48,64 @@ a {
 input,
 button,
 select {
+  --fontSize: 1.25em;
+  --verticalPadding: 16px;
+  --horizontalPadding: 10px;
+
   width: 100%;
-  padding: 0.25em;
-  font-size: 1.25em;
+  font-size: var(--fontSize);
+  padding: var(--horizontalPadding) var(--verticalPadding);
+  font-family: 'Noto Serif Thai', serif;
+}
+
+button {
+  border: none;
+  border: 2px solid var(--primary-light);
+  display: block;
+  appearance: none;
+  border-radius: 6px;
+  width: 100%;
+  background-color: #e8eae6;
+  transition: 250ms ease-in-out color background-color border-color;
+}
+button:disabled {
+  --disabled-color: hsl(90 9% 95%);
+  background-color: var(--disabled-color);
+  border-color: var(--disabled-color);
+  color: #999;
 }
 
 .primary-btn {
-  background-color: deeppink;
+  transition: 250ms ease-in-out;
+  background-color: var(--primary-color);
   color: white;
+}
+
+input,
+select {
+  display: block;
+  border-radius: var(--inputBorderRadius);
+  border: var(--inputBorder);
+  background-color: var(--inputBgColor);
+}
+
+::placeholder {
+  /* Chrome, Firefox, Opera, Safari 10.1+ */
+  font-style: italic;
+}
+
+:-ms-input-placeholder {
+  /* Internet Explorer 10-11 */
+  font-style: italic;
+}
+
+::-ms-input-placeholder {
+  /* Microsoft Edge */
+  font-style: italic;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }

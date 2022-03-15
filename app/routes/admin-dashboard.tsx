@@ -1,7 +1,9 @@
 import * as React from 'react'
+import { ClientOnly } from 'remix-utils'
 import { Status, Wrapper } from '@googlemaps/react-wrapper'
-import { HomeIsolationForm, Patient } from '@prisma/client'
+import { HomeIsolationForm, Patient, Prisma } from '@prisma/client'
 import { json, LinksFunction, LoaderFunction, useLoaderData } from 'remix'
+import { zfd } from 'zod-form-data'
 
 import { db } from '~/utils/db.server'
 import { requireAdminPermission } from '~/utils/session.server'
@@ -14,18 +16,49 @@ import {
 } from '~/domain/treatment'
 
 import datePickerStyles from 'react-datepicker/dist/react-datepicker.css'
-import { ClientOnly } from 'remix-utils'
+import { homeIsolationFormValuesSchema } from '~/components/home-isolation-form-editor'
+import { z } from 'zod'
 
 export const links: LinksFunction = () => [
   { href: datePickerStyles, rel: 'stylesheet' },
 ]
 
 type HomeIsolationFormData = HomeIsolationForm & {
-  patients: Patient[]
+  patients: Omit<Patient, 'formOwnerId'>[]
 }
 
 type LoaderData = {
   homeIsolationForms: HomeIsolationFormData[]
+}
+
+const decimal = z.preprocess((val) => {
+  if (Prisma.Decimal.isDecimal(val)) {
+    return val
+  }
+  if (typeof val === 'string' || typeof val === 'number') {
+    return new Prisma.Decimal(val)
+  }
+}, z.instanceof(Prisma.Decimal))
+
+const schema = homeIsolationFormValuesSchema.extend({
+  createdAt: z.preprocess((val) => {
+    if (typeof val === 'string' || val instanceof Date) {
+      return new Date(val)
+    }
+  }, z.date()),
+  updatedAt: z.preprocess((val) => {
+    if (typeof val === 'string' || val instanceof Date) {
+      return new Date(val)
+    }
+  }, z.date()),
+  lat: decimal,
+  lng: decimal,
+  treatmentDayCount: zfd.numeric(),
+})
+const parseManyToHomeIsolationFormData = (
+  data: unknown
+): HomeIsolationFormData[] => {
+  return schema.array().parse(data)
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
@@ -55,6 +88,9 @@ type Actions = 'add' | 'delete' | 'idle'
 
 export default function AdminDashboardRoute() {
   const data = useLoaderData<LoaderData>()
+  const homeIsolationForms = parseManyToHomeIsolationFormData(
+    data.homeIsolationForms
+  )
 
   const [spottedFormIds, setSpottedFormIds] = React.useState<{
     items: Set<string>
@@ -115,7 +151,7 @@ export default function AdminDashboardRoute() {
             gap: 24,
           }}
         >
-          {data.homeIsolationForms.map((form) => {
+          {homeIsolationForms.map((form) => {
             return (
               <li
                 key={form.id}
@@ -155,15 +191,17 @@ export default function AdminDashboardRoute() {
                 keyboardShortcuts={false}
                 zoomControl={false}
               >
-                {data.homeIsolationForms.map((form) => (
-                  <Marker
-                    key={form.id}
-                    position={{ lat: +form.lat, lng: +form.lng }}
-                    data={form}
-                    isSpotted={spottedFormIds.items.has(form.id)}
-                    onClick={onToggleSpottedFormIdHandler}
-                  />
-                ))}
+                {homeIsolationForms.map((form) =>
+                  form.lat && form.lng ? (
+                    <Marker
+                      key={form.id}
+                      position={{ lat: +form.lat, lng: +form.lng }}
+                      data={form}
+                      isSpotted={spottedFormIds.items.has(form.id)}
+                      onClick={onToggleSpottedFormIdHandler}
+                    />
+                  ) : null
+                )}
               </Map>
             </Wrapper>
           )}

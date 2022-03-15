@@ -5,7 +5,7 @@ import { HealthViz } from '~/components/health-viz'
 import { useClipboard } from '~/hooks/useClipboard'
 
 type Data = HomeIsolationForm & {
-  patients: Patient[]
+  patients: Omit<Patient, 'formOwnerId'>[]
 }
 
 export const HomeIsolationFormListItem: React.FC<{
@@ -72,6 +72,7 @@ export const HomeIsolationFormListItem: React.FC<{
     </div>
   )
 }
+
 const ActionsList: React.FC<{ style?: React.CSSProperties }> = ({
   children,
   style = {},
@@ -91,6 +92,7 @@ const ActionsList: React.FC<{ style?: React.CSSProperties }> = ({
     </div>
   )
 }
+
 const ActionBtn: React.FC<
   React.DetailedHTMLProps<
     React.ButtonHTMLAttributes<HTMLButtonElement>,
@@ -105,6 +107,7 @@ const ActionBtn: React.FC<
         fontSize: 'var(--btn-font-size)',
         minWidth: 'var(--btn-size)',
         fontWeight: 'bold',
+        padding: 'revert',
       }}
     >
       {children}
