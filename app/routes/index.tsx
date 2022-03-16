@@ -1,62 +1,76 @@
-import * as React from 'react'
-import { LinksFunction } from 'remix'
-import { ClientOnly } from 'remix-utils'
-import { Patient, Prisma } from '@prisma/client'
-import { Status, Wrapper } from '@googlemaps/react-wrapper'
+// import * as React from 'react'
+// import { LinksFunction } from 'remix'
+// import { ClientOnly } from 'remix-utils'
+// import { Patient, Prisma } from '@prisma/client'
+// import { Status, Wrapper } from '@googlemaps/react-wrapper'
 
-import { Map } from '~/components/map'
-import {
-  HomeIsolationFormEditor,
-  NewHomeIsolationFormEditor,
-  useHomeIsolationFormValues,
-} from '~/components/home-isolation-form-editor'
-import { useGetCurrentPosition } from '~/hooks/useGetCurrentPosition'
-import { useGetLineProfile } from '~/hooks/useLineLiff'
+import { HomeIsolationForm, Patient } from '@prisma/client'
+import { Form, json, Link, LoaderFunction, useLoaderData } from 'remix'
 
-import datePickerStyles from 'react-datepicker/dist/react-datepicker.css'
+import { db } from '~/utils/db.server'
+import { requireUserLineId } from '~/utils/session.server'
+import { useLIFFUtilsBeforeInit } from '~/hooks/useLIFF'
 
-export const links: LinksFunction = () => [
-  { href: datePickerStyles, rel: 'stylesheet' },
-]
+// import { Map } from '~/components/map'
+// import {
+//   HomeIsolationFormEditor,
+//   NewHomeIsolationFormEditor,
+//   useHomeIsolationFormValues,
+// } from '~/components/home-isolation-form-editor'
+// import { useGetCurrentPosition } from '~/hooks/useGetCurrentPosition'
+// import { useGetLineProfile } from '~/hooks/useLineLiff'
 
-const INITIAL_ZOOM = 14
-const INITIAL_POSITION = {
-  lat: 8.0294121,
-  lng: 99.6502966,
+// import datePickerStyles from 'react-datepicker/dist/react-datepicker.css'
+
+// export const links: LinksFunction = () => [
+//   { href: datePickerStyles, rel: 'stylesheet' },
+// ]
+
+// const INITIAL_ZOOM = 14
+// const INITIAL_POSITION = {
+//   lat: 8.0294121,
+//   lng: 99.6502966,
+// }
+
+// enum EditingMode {
+//   PinMap,
+//   EditForm,
+// }
+
+// type PatientsEditorData = Omit<Patient, 'formOwnerId'>[]
+
+type LoaderData = {
+  homeIsolationForms: (HomeIsolationForm & { patients: Patient[] })[]
 }
 
-enum EditingMode {
-  PinMap,
-  EditForm,
+export const loader: LoaderFunction = async ({ request }) => {
+  const userLineId = await requireUserLineId(request)
+  const homeIsolationForms = await db.homeIsolationForm.findMany({
+    where: { lineId: userLineId },
+    include: { patients: true },
+  })
+  return json<LoaderData>({ homeIsolationForms })
 }
-
-type PatientsEditorData = Omit<Patient, 'formOwnerId'>[]
 
 export default function Index() {
-  const methods = useHomeIsolationFormValues({
-    defaultValues: {
-      id: 'DRAFT',
-      // TODO: date should be define on loader to prevent markup mismatch issue?
-      admittedAt: new Date(),
-      landmarkNote: '',
-      address: '',
-      phone: '',
-      lineId: '',
-      lineDisplayName: '',
-      patients: [
-        {
-          id: '0',
-          name: '',
-        },
-      ],
-      // @ts-ignore
-      zone: '',
-    },
-  })
+  const data = useLoaderData<LoaderData>()
+  const { deviceEnv } = useLIFFUtilsBeforeInit()
+
+  const action =
+    deviceEnv === 'browser' ? (
+      <Form action="/logout" method="post">
+        <button type="submit" style={{ maxWidth: 'max-content' }}>
+          ออกจากระบบ
+        </button>
+      </Form>
+    ) : null
+
   return (
-    <div style={{ padding: '12px 16px' }}>
-      <HomeIsolationFormEditor methods={methods} />
-    </div>
+    <main style={{ overflow: 'auto' }}>
+      <p>TODO: Implement user-profile</p>
+      {action}
+      <pre>{JSON.stringify(data, null, 2)}</pre>
+    </main>
   )
 }
 

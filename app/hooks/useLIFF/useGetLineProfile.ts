@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useLIFFUtilsBeforeInit } from '.'
 import { liff } from './liff.client'
 
 type State =
@@ -16,10 +17,14 @@ type Profile = {
 }
 
 export function useGetLineProfile() {
+  const { deviceEnv } = useLIFFUtilsBeforeInit()
+
+  // TODO: Refactor to useReducer?
+  // useReducer might be more simpler & enhance readability in DevTools
   const [state, setState] = React.useState<State>('idle')
   const [profile, setProfile] = React.useState<Profile>()
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false)
-  const [isInClient, setIsInClient] = React.useState<boolean>()
+  const [idToken, setIdToken] = React.useState<string>()
+  const [isLoggedIn, setIsLoggedIn] = React.useState<boolean>()
 
   React.useEffect(function initialize() {
     setState('initializing')
@@ -30,7 +35,6 @@ export function useGetLineProfile() {
     liff
       .init({
         liffId: window.ENV.LIFF_ID,
-        withLoginOnExternalBrowser: true,
       })
       .then(() => {
         if (isCanceled) {
@@ -53,16 +57,17 @@ export function useGetLineProfile() {
     }
   }, [])
 
-  React.useEffect(function autoLogoutOnUnmount() {
-    return () => {
+  React.useEffect(function autoLogout() {
+    const logoutHandler = () => {
       if (liff.isLoggedIn()) {
         liff.logout()
       }
     }
-  }, [])
-
-  React.useEffect(function detectClientDevice() {
-    setIsInClient(liff.isInClient())
+    window.addEventListener('beforeunload', logoutHandler)
+    return () => {
+      window.removeEventListener('beforeunload', logoutHandler)
+      logoutHandler()
+    }
   }, [])
 
   React.useEffect(
@@ -86,6 +91,14 @@ export function useGetLineProfile() {
     },
     [state]
   )
+  React.useEffect(
+    function getIdTokenAfterInitialized() {
+      if (state === 'initialized') {
+        setIdToken(liff.getIDToken() ?? undefined)
+      }
+    },
+    [state]
+  )
 
   React.useEffect(
     function updateLoggedInState() {
@@ -103,11 +116,12 @@ export function useGetLineProfile() {
   }
 
   const shouldLoginManually =
-    typeof isInClient === 'undefined' ? false : !isInClient && !isLoggedIn
+    deviceEnv === 'browser' && typeof isLoggedIn === 'boolean' && !isLoggedIn
 
   return {
     state,
     profile,
+    idToken,
     login,
     shouldLoginManually,
   }

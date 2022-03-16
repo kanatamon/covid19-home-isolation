@@ -50,6 +50,25 @@ export async function requireAdminPermission(
   return userRole
 }
 
+export async function getUserLineId(request: Request) {
+  const session = await getUserSession(request)
+  const userLineId = session.get('userLineId')
+  return !userLineId || typeof userLineId !== 'string' ? null : userLineId
+}
+
+export async function requireUserLineId(
+  request: Request,
+  redirectTo: string = new URL(request.url).pathname
+) {
+  const session = await getUserSession(request)
+  const userLineId = session.get('userLineId')
+  if (!userLineId || typeof userLineId !== 'string') {
+    const searchParams = new URLSearchParams([['redirectTo', redirectTo]])
+    throw redirect(`/login?${searchParams}`)
+  }
+  return userLineId
+}
+
 export async function createAdminSession(redirectTo: string) {
   const session = await storage.getSession()
   session.set('role', 'admin')
@@ -61,9 +80,21 @@ export async function createAdminSession(redirectTo: string) {
   })
 }
 
-export async function logout(request: Request) {
+export async function createUserSession(
+  userLineId: string,
+  redirectTo: string
+) {
+  const session = await storage.getSession()
+  session.set('role', 'user')
+  session.set('userLineId', userLineId)
+  return redirect(redirectTo, {
+    headers: { 'Set-Cookie': await storage.commitSession(session) },
+  })
+}
+
+export async function logout(request: Request, redirectTo: string = '/login') {
   const session = await getUserSession(request)
-  return redirect('/login-as-admin', {
+  return redirect(redirectTo, {
     headers: {
       'Set-Cookie': await storage.destroySession(session),
     },

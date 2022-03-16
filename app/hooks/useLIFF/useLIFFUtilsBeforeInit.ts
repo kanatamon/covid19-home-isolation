@@ -3,7 +3,7 @@ import { liff } from './liff.client'
 
 type DeviceEnv = 'undecided' | 'browser' | 'liff'
 
-export function useUtilsBeforeInit() {
+export function useLIFFUtilsBeforeInit() {
   const [deviceEnv, setDeviceEnv] = React.useState<DeviceEnv>('undecided')
 
   React.useEffect(function () {

@@ -1,13 +1,13 @@
 import { Link } from 'remix'
 import QRCode from 'qrcode.react'
 
-import { useUtilsBeforeInit } from '~/hooks/useLineLiff/useUtilsBeforeInit'
+import { useLIFFUtilsBeforeInit } from '~/hooks/useLIFF'
 
 const linkToGroup =
   'https://liff.line.me/1645278921-kWRPP32q/?accountId=510lxrso'
 
 export default function FormResponseRoute() {
-  const liffUtils = useUtilsBeforeInit()
+  const liffUtils = useLIFFUtilsBeforeInit()
 
   return (
     <div
