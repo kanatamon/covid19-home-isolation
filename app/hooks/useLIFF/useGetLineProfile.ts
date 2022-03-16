@@ -57,18 +57,18 @@ export function useGetLineProfile() {
     }
   }, [])
 
-  React.useEffect(function autoLogout() {
-    const logoutHandler = () => {
-      if (liff.isLoggedIn()) {
-        liff.logout()
-      }
-    }
-    window.addEventListener('beforeunload', logoutHandler)
-    return () => {
-      window.removeEventListener('beforeunload', logoutHandler)
-      logoutHandler()
-    }
-  }, [])
+  // React.useEffect(function autoLogout() {
+  //   const logoutHandler = () => {
+  //     if (liff.isLoggedIn()) {
+  //       liff.logout()
+  //     }
+  //   }
+  //   window.addEventListener('beforeunload', logoutHandler)
+  //   return () => {
+  //     window.removeEventListener('beforeunload', logoutHandler)
+  //     logoutHandler()
+  //   }
+  // }, [])
 
   React.useEffect(
     function getProfileAfterInitialized() {
@@ -110,8 +110,14 @@ export function useGetLineProfile() {
   )
 
   const login = () => {
-    if (!liff.isLoggedIn() && !liff.isInClient()) {
+    if (deviceEnv === 'browser' && !isLoggedIn) {
       liff.login()
+    }
+  }
+
+  const logout = () => {
+    if (deviceEnv === 'browser' && isLoggedIn) {
+      liff.logout()
     }
   }
 
@@ -123,6 +129,8 @@ export function useGetLineProfile() {
     profile,
     idToken,
     login,
+    logout,
     shouldLoginManually,
+    deviceEnv,
   }
 }

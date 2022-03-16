@@ -4,12 +4,20 @@
 // import { Patient, Prisma } from '@prisma/client'
 // import { Status, Wrapper } from '@googlemaps/react-wrapper'
 
+import { useRef } from 'react'
 import { HomeIsolationForm, Patient } from '@prisma/client'
-import { Form, json, Link, LoaderFunction, useLoaderData } from 'remix'
+import {
+  Form,
+  json,
+  LoaderFunction,
+  useLoaderData,
+  useSubmit,
+  useTransition,
+} from 'remix'
 
 import { db } from '~/utils/db.server'
 import { requireUserLineId } from '~/utils/session.server'
-import { useLIFFUtilsBeforeInit } from '~/hooks/useLIFF'
+import { useGetLineProfile } from '~/hooks/useLIFF'
 
 // import { Map } from '~/components/map'
 // import {
@@ -53,14 +61,30 @@ export const loader: LoaderFunction = async ({ request }) => {
 }
 
 export default function Index() {
+  const submit = useSubmit()
+  const transition = useTransition()
   const data = useLoaderData<LoaderData>()
-  const { deviceEnv } = useLIFFUtilsBeforeInit()
+  const { deviceEnv, logout } = useGetLineProfile()
+  const formRef = useRef<HTMLFormElement>(null)
+
+  const logoutHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault()
+    submit(formRef.current)
+    logout()
+  }
 
   const action =
     deviceEnv === 'browser' ? (
-      <Form action="/logout" method="post">
-        <button type="submit" style={{ maxWidth: 'max-content' }}>
-          ออกจากระบบ
+      <Form ref={formRef} action="/logout" method="post">
+        <button
+          type="submit"
+          style={{ maxWidth: 'max-content' }}
+          onClick={logoutHandler}
+          disabled={transition.state === 'submitting'}
+        >
+          {transition.state === 'submitting'
+            ? 'กำลังออกจากระบบ...'
+            : 'ออกจากระบบ'}
         </button>
       </Form>
     ) : null

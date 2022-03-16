@@ -13,6 +13,7 @@
   "dependencies": {
     "@googlemaps/react-wrapper": "^1.1.25",
     "@hookform/resolvers": "^2.8.8",
+    "@line/bot-sdk": "^7.4.0",
     "@line/liff": "^2.18.2",
     "@netlify/functions": "^0.10.0",
     "@prisma/client": "^3.10.0",

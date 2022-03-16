@@ -29,7 +29,7 @@ export const homeIsolationFormValuesSchema = z.object({
   phone: z.string().nonempty('Phone is required!'),
   lineId: z.string(),
   lineDisplayName: z.string(),
-  linePictureUrl: z.string().nullable(),
+  linePictureUrl: z.string().optional(),
   patients: z
     .array(
       z.object({
@@ -89,14 +89,18 @@ export function useHomeIsolationFormValues({
 }
 
 export const NewHomeIsolationFormEditor: React.FC<{
-  methods?: UseFormReturn<HomeIsolationFormValues>
-}> = (props) => {
+  controller?: UseFormReturn<HomeIsolationFormValues>
+  defaultValues?: Partial<HomeIsolationFormValues>
+}> = ({ controller, defaultValues = {} }) => {
   const fetcher = useFetcher()
   const methods = useHomeIsolationFormValues({
-    defaultValues: genDefaultNewFormValues(),
+    defaultValues: {
+      ...genDefaultNewFormValues(),
+      ...defaultValues,
+    },
   })
   const { isValid } = useFormState({ control: methods.control })
-
+  console.log(isValid)
   const canEdit = fetcher.state !== 'submitting'
 
   return (
