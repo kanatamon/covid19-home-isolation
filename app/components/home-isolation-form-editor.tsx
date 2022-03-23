@@ -29,7 +29,7 @@ export const homeIsolationFormValuesSchema = z.object({
   phone: z.string().nonempty('Phone is required!'),
   lineId: z.string(),
   lineDisplayName: z.string(),
-  linePictureUrl: z.string().optional(),
+  linePictureUrl: z.string().nullable(),
   patients: z
     .array(
       z.object({

@@ -51,8 +51,8 @@ const schema = homeIsolationFormValuesSchema.extend({
       return new Date(val)
     }
   }, z.date()),
-  lat: decimal,
-  lng: decimal,
+  lat: decimal.nullable(),
+  lng: decimal.nullable(),
   treatmentDayCount: zfd.numeric(),
 })
 const parseManyToHomeIsolationFormData = (

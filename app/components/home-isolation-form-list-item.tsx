@@ -58,7 +58,11 @@ export const HomeIsolationFormListItem: React.FC<{
         treatmentDayCount={data.treatmentDayCount}
       />
       <ActionsList style={{ width: 'max-content' }}>
-        <ActionBtn onClick={onMapBtnClick} style={mapBtnStyle}>
+        <ActionBtn
+          onClick={onMapBtnClick}
+          style={mapBtnStyle}
+          disabled={data.lat === null || data.lng === null}
+        >
           Map
         </ActionBtn>
         <ActionBtn onClick={onEditBtnClick}>Edit</ActionBtn>
