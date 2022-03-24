@@ -70,7 +70,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   return new Response()
 }
 
-export default function NewHomeIsolationFormRoute() {
+export default function NewContactRoute() {
   const [isOpenSuccessDialog, setIsOpenSuccessDialog] = useState(false)
   const { profile } = useGetLineProfile()
 
