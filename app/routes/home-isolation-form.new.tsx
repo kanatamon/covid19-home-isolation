@@ -1,4 +1,5 @@
-import { badRequest, unauthorized } from 'remix-utils'
+import { useState } from 'react'
+import { badRequest, unauthorized, unprocessableEntity } from 'remix-utils'
 import {
   type ActionFunction,
   json,
@@ -7,8 +8,9 @@ import {
   LinksFunction,
 } from 'remix'
 import { validationError } from 'remix-validated-form'
+import { Dialog, DialogOverlay, DialogContent } from '@reach/dialog'
 
-import { useGetLineProfile } from '~/hooks/useLIFF'
+import { useGetLineProfile, useLIFFUtilsBeforeInit } from '~/hooks/useLIFF'
 import { requireUserLineId } from '~/utils/session.server'
 import { db } from '~/utils/db.server'
 import { calculateTreatmentDayCount } from '~/domain/treatment'
@@ -19,13 +21,16 @@ import {
 import { lineClient } from '~/utils/line-client.server'
 
 import datePickerStyles from 'react-datepicker/dist/react-datepicker.css'
+import dialogStyles from '@reach/dialog/styles.css'
 
 export const links: LinksFunction = () => [
   { href: datePickerStyles, rel: 'stylesheet' },
+  { href: dialogStyles, rel: 'stylesheet' },
 ]
 
 export const action: ActionFunction = async ({ request }) => {
   const userLineId = await requireUserLineId(request)
+  await requireNewUserOnly(userLineId)
 
   const result = await homeIsolationFormValidator.validate(
     await request.formData()
@@ -38,12 +43,14 @@ export const action: ActionFunction = async ({ request }) => {
     throw unauthorized(`You can't create new form of other user.`)
   }
 
+  const { id, ...contact } = data
+
   await db.homeIsolationForm.create({
     data: {
-      ...data,
-      treatmentDayCount: calculateTreatmentDayCount(data.admittedAt),
+      ...contact,
+      treatmentDayCount: calculateTreatmentDayCount(contact.admittedAt),
       patients: {
-        create: data.patients.map(({ name }) => ({ name })),
+        create: contact.patients.map(({ name }) => ({ name })),
       },
     },
   })
@@ -58,50 +65,58 @@ export const action: ActionFunction = async ({ request }) => {
 
 export const loader: LoaderFunction = async ({ request }) => {
   const userLineId = await requireUserLineId(request)
-  const userForm = await db.homeIsolationForm.findFirst({
-    where: { lineId: userLineId },
-  })
-  if (userForm) {
-    throw badRequest(`You've already create contact.`)
-  }
-  return json({ userLineId })
+  await requireNewUserOnly(userLineId)
+
+  return new Response()
 }
 
 export default function NewHomeIsolationFormRoute() {
+  const [isOpenSuccessDialog, setIsOpenSuccessDialog] = useState(false)
   const { profile } = useGetLineProfile()
 
+  const onNewFormSubmittedSuccessfullyHandler = () => {
+    setIsOpenSuccessDialog(true)
+  }
+
   return (
-    <main
-      style={{
-        minHeight: '100%',
-        display: 'grid',
-        placeItems: 'center',
-      }}
-    >
-      {profile ? (
-        <div style={{ padding: '32px 24px', width: '100%', maxWidth: '500px' }}>
-          <NewHomeIsolationFormEditor
-            defaultValues={{
-              lineId: profile.userId,
-              lineDisplayName: profile.displayName,
-              linePictureUrl: profile.pictureUrl,
-              patients: [
-                {
-                  id: 'draft',
-                  name: profile.displayName,
-                },
-              ],
-            }}
-          />
-        </div>
-      ) : (
-        <p>กำลังโหลดข้อมูลกรุณารอสักครู่...</p>
-      )}
-    </main>
+    <>
+      <main
+        style={{
+          minHeight: '100%',
+          display: 'grid',
+          placeItems: 'center',
+        }}
+      >
+        {profile ? (
+          <div
+            style={{ padding: '32px 24px', width: '100%', maxWidth: '500px' }}
+          >
+            <NewHomeIsolationFormEditor
+              onSuccess={onNewFormSubmittedSuccessfullyHandler}
+              defaultValues={{
+                lineId: profile.userId,
+                lineDisplayName: profile.displayName,
+                linePictureUrl: profile.pictureUrl,
+                patients: [
+                  {
+                    id: 'draft',
+                    name: profile.displayName,
+                  },
+                ],
+              }}
+            />
+          </div>
+        ) : (
+          <p>กำลังโหลดข้อมูลกรุณารอสักครู่...</p>
+        )}
+      </main>
+      <SuccessNewFormDialog isOpen={isOpenSuccessDialog} />
+    </>
   )
 }
 
 export function CatchBoundary() {
+  const { deviceEnv, closeLiffApp } = useLIFFUtilsBeforeInit()
   const caught = useCatch()
 
   if (
@@ -109,9 +124,58 @@ export function CatchBoundary() {
     caught.data.match(/You've already create contact/i)
   ) {
     return (
-      <div>
+      <AlertDialog isOpen={true}>
         <p>ท่านเคยลงทะเบียนเรียบร้อยแล้ว ไม่สามารถลงทะเบียนซ้ำได้</p>
-      </div>
+        <div style={{ height: '24px' }} />
+        {deviceEnv === 'liff' ? (
+          <button onClick={closeLiffApp}>ปิดหน้านี้</button>
+        ) : null}
+      </AlertDialog>
     )
+  }
+}
+
+const SuccessNewFormDialog: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
+  const { deviceEnv, closeLiffApp } = useLIFFUtilsBeforeInit()
+
+  return (
+    <AlertDialog isOpen={isOpen}>
+      {/* TODO: Add wizard visualizing number of the registration progress */}
+      <h1 style={{ fontSize: '1.5rem' }}>ขั้นตอนลงทะเบียนสำเร็จ</h1>
+      <p>
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum, cum
+        accusantium quo vero, eaque aliquam quam optio, dolores doloribus sunt
+        ullam doloremque consequuntur mollitia animi nisi dolorum maiores labore
+        molestias?
+      </p>
+      <div style={{ height: '24px' }} />
+      {deviceEnv === 'liff' ? (
+        <button onClick={closeLiffApp}>ปิดหน้านี้</button>
+      ) : null}
+    </AlertDialog>
+  )
+}
+
+const AlertDialog: React.FC<{ isOpen: boolean }> = ({ isOpen, children }) => {
+  return (
+    <DialogOverlay
+      isOpen={isOpen}
+      style={{ display: 'grid', placeItems: 'center' }}
+    >
+      <DialogContent
+        style={{ borderRadius: '4px', maxWidth: '350px', width: '90%' }}
+      >
+        {children}
+      </DialogContent>
+    </DialogOverlay>
+  )
+}
+
+async function requireNewUserOnly(userLineId: string) {
+  const userForm = await db.homeIsolationForm.findFirst({
+    where: { lineId: userLineId },
+  })
+  if (userForm) {
+    throw unprocessableEntity(`You've already create contact.`)
   }
 }

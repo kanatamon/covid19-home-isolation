@@ -89,9 +89,9 @@ export function useHomeIsolationFormValues({
 }
 
 export const NewHomeIsolationFormEditor: React.FC<{
-  controller?: UseFormReturn<HomeIsolationFormValues>
+  onSuccess?: () => any
   defaultValues?: Partial<HomeIsolationFormValues>
-}> = ({ controller, defaultValues = {} }) => {
+}> = ({ onSuccess, defaultValues = {} }) => {
   const fetcher = useFetcher()
   const methods = useHomeIsolationFormValues({
     defaultValues: {
@@ -100,11 +100,21 @@ export const NewHomeIsolationFormEditor: React.FC<{
     },
   })
   const { isValid } = useFormState({ control: methods.control })
-  console.log(isValid)
-  const canEdit = fetcher.state !== 'submitting'
+
+  const hasSuccessfullySubmitted = JSON.stringify(fetcher.data) === '{}'
+
+  React.useEffect(
+    function emitOnSuccess() {
+      hasSuccessfullySubmitted && onSuccess?.()
+    },
+    [hasSuccessfullySubmitted]
+  )
+
+  const canEdit = fetcher.state !== 'submitting' && !hasSuccessfullySubmitted
 
   return (
     <fetcher.Form
+      replace
       method="post"
       action="/home-isolation-form/new"
       style={{
@@ -117,16 +127,22 @@ export const NewHomeIsolationFormEditor: React.FC<{
     >
       <HomeIsolationFormCommon methods={methods} canEdit={canEdit} />
       <section>
-        <input type="hidden" name="_method" value="create" />
-        <button
-          type="submit"
-          className="primary-btn"
-          disabled={fetcher.state === 'submitting' || !isValid}
-        >
-          {fetcher.state === 'submitting'
-            ? 'กำลังส่งแบบฟอร์ม...'
-            : 'ส่งแบบฟอร์ม'}
-        </button>
+        {hasSuccessfullySubmitted ? (
+          <button disabled>ส่งแบบฟอร์มสำเร็จแล้ว</button>
+        ) : (
+          <>
+            <input type="hidden" name="_method" value="create" />
+            <button
+              type="submit"
+              className="primary-btn"
+              disabled={fetcher.state === 'submitting' || !isValid}
+            >
+              {fetcher.state === 'submitting'
+                ? 'กำลังส่งแบบฟอร์ม...'
+                : 'ส่งแบบฟอร์ม'}
+            </button>
+          </>
+        )}
       </section>
     </fetcher.Form>
   )
