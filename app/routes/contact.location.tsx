@@ -147,6 +147,7 @@ export default function ContactLocationRoute() {
   const transition = useTransition()
   const actionData = useActionData()
 
+  // TODO: Refactor both of these state into reducer?
   const [isOpenSuccessDialog, setIsOpenSuccessDialog] = React.useState(() => {
     const { lat, lng } = data.locationFormValues
     return typeof lat === 'number' && typeof lng === 'number'
