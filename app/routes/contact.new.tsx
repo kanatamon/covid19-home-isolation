@@ -8,7 +8,6 @@ import {
   LinksFunction,
 } from 'remix'
 import { validationError } from 'remix-validated-form'
-import { Dialog, DialogOverlay, DialogContent } from '@reach/dialog'
 
 import { useGetLineProfile, useLIFFUtilsBeforeInit } from '~/hooks/useLIFF'
 import { requireUserLineId } from '~/utils/session.server'
@@ -19,6 +18,7 @@ import {
   NewHomeIsolationFormEditor,
 } from '~/components/home-isolation-form-editor'
 import { lineClient } from '~/utils/line-client.server'
+import { AlertDialog } from '~/components/alert-dialog'
 
 import datePickerStyles from 'react-datepicker/dist/react-datepicker.css'
 import dialogStyles from '@reach/dialog/styles.css'
@@ -153,21 +153,6 @@ const SuccessNewFormDialog: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
         <button onClick={closeLiffApp}>ปิดหน้านี้</button>
       ) : null}
     </AlertDialog>
-  )
-}
-
-const AlertDialog: React.FC<{ isOpen: boolean }> = ({ isOpen, children }) => {
-  return (
-    <DialogOverlay
-      isOpen={isOpen}
-      style={{ display: 'grid', placeItems: 'center' }}
-    >
-      <DialogContent
-        style={{ borderRadius: '4px', maxWidth: '350px', width: '90%' }}
-      >
-        {children}
-      </DialogContent>
-    </DialogOverlay>
   )
 }
 

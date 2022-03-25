@@ -4,19 +4,15 @@ import { createCustomEqual } from 'fast-equals'
 interface MapProps extends google.maps.MapOptions {
   style: { [key: string]: string }
   onClick?: (e: google.maps.MapMouseEvent) => void
-  markerPosition?: google.maps.LatLngLiteral
   canInteract?: boolean
   defaultOptions?: { center: google.maps.LatLngLiteral; zoom: number }
   onIdle?: (map: google.maps.Map) => void
-  onDrag?: (map: google.maps.Map) => void
 }
 
 export const Map: React.FC<MapProps> = ({
   onIdle,
-  onDrag,
   canInteract = true,
   onClick,
-  markerPosition,
   children,
   style,
   defaultOptions = {},
@@ -24,8 +20,6 @@ export const Map: React.FC<MapProps> = ({
 }) => {
   const ref = React.useRef<HTMLDivElement>(null)
   const [map, setMap] = React.useState<google.maps.Map>()
-  // TODO: Remove marker use mock pin-icon and stay at center instead
-  const [marker, setMarker] = React.useState<google.maps.Marker>()
 
   React.useEffect(
     function manageMapExistence() {
@@ -33,7 +27,6 @@ export const Map: React.FC<MapProps> = ({
         const newMap = new window.google.maps.Map(ref.current, {
           ...options,
           ...defaultOptions,
-          ...(markerPosition ? { center: markerPosition } : {}),
         })
         setMap(newMap)
       }
@@ -51,55 +44,51 @@ export const Map: React.FC<MapProps> = ({
   React.useEffect(
     function manageEventListeners() {
       if (map) {
-        ;['drag', 'idle'].forEach((eventName) =>
+        ;['idle'].forEach((eventName) =>
           google.maps.event.clearListeners(map, eventName)
         )
 
         if (onIdle) {
           map.addListener('idle', () => onIdle(map))
         }
-
-        if (onDrag) {
-          map.addListener('drag', () => onDrag(map))
-        }
       }
     },
-    [map, onIdle, onDrag]
+    [map, onIdle]
   )
 
-  React.useEffect(
-    function manageMarkerExistence() {
-      if (!marker && markerPosition) {
-        setMarker(new google.maps.Marker())
-      }
+  // React.useEffect(
+  //   function manageMarkerExistence() {
+  //     if (!marker && markerPosition) {
+  //       setMarker(new google.maps.Marker())
+  //     }
 
-      // remove marker from map on unmount
-      return () => {
-        !markerPosition && marker?.setMap(null)
-      }
-    },
-    [marker, markerPosition]
-  )
+  //     // remove marker from map on unmount
+  //     return () => {
+  //       !markerPosition && marker?.setMap(null)
+  //     }
+  //   },
+  //   [marker, markerPosition]
+  // )
 
-  useDeepCompareEffectForMaps(
-    function bindMarkerToNewMapCenter() {
-      if (marker && map) {
-        marker.setMap(map)
-        onDrag?.(map)
-        onIdle?.(map)
-      }
-    },
-    [map]
-  )
+  // useDeepCompareEffectForMaps(
+  //   function bindMarkerToNewMapCenter() {
+  //     if (marker && map) {
+  //       marker.setMap(map)
+  //       onDrag?.(map)
+  //       onIdle?.(map)
+  //     }
+  //   },
+  //   [map]
+  // )
 
-  React.useEffect(
-    function updateMarkerPositionOnMap() {
-      if (markerPosition && marker) {
-        marker.setPosition(markerPosition)
-      }
-    },
-    [markerPosition, marker]
-  )
+  // React.useEffect(
+  //   function updateMarkerPositionOnMap() {
+  //     if (markerPosition && marker) {
+  //       marker.setPosition(markerPosition)
+  //     }
+  //   },
+  //   [markerPosition, marker]
+  // )
 
   const smartInteractGuard = !canInteract ? (
     <div

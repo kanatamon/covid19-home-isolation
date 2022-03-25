@@ -1,123 +1,309 @@
 import { Status, Wrapper } from '@googlemaps/react-wrapper'
 import { Prisma } from '@prisma/client'
 import React from 'react'
-import { LoaderFunction } from 'remix'
-import { ClientOnly, unprocessableEntity } from 'remix-utils'
+import {
+  ActionFunction,
+  Form,
+  json,
+  LinksFunction,
+  LoaderFunction,
+  useActionData,
+  useLoaderData,
+  useTransition,
+} from 'remix'
+import { ClientOnly, unauthorized, unprocessableEntity } from 'remix-utils'
+import { z } from 'zod'
+import { withZod } from '@remix-validated-form/with-zod'
 
+import { LocationPin } from '~/components/icons/location-pin'
 import { useGetCurrentPosition } from '~/hooks/useGetCurrentPosition'
 import { db } from '~/utils/db.server'
 import { requireUserLineId } from '~/utils/session.server'
 import { Map } from '~/components/map'
+import { homeIsolationFormValuesSchema } from '~/components/home-isolation-form-editor'
+import { validationError } from 'remix-validated-form'
+import { useLIFFUtilsBeforeInit } from '~/hooks/useLIFF'
+import { AlertDialog } from '~/components/alert-dialog'
 
-const INITIAL_ZOOM = 14
-const INITIAL_LOCATION = {
+import dialogStyles from '@reach/dialog/styles.css'
+import { lineClient } from '~/utils/line-client.server'
+
+const DEFAULT_ZOOM = 14
+const DEFAULT_LOCATION = {
   lat: 8.0294121,
   lng: 99.6502966,
+}
+
+export const links: LinksFunction = () => [
+  { href: dialogStyles, rel: 'stylesheet' },
+]
+
+const numericPosition = z.preprocess((val) => {
+  if (typeof val === 'string' || typeof val === 'number') {
+    return +val
+  }
+  if (Prisma.Decimal.isDecimal(val)) {
+    return (val as Prisma.Decimal).toNumber()
+  }
+}, z.number())
+const locationFormValuesSchema = homeIsolationFormValuesSchema
+  .pick({
+    id: true,
+  })
+  .extend({
+    lat: numericPosition.nullable(),
+    lng: numericPosition.nullable(),
+  })
+const locationFormValuesValidator = withZod(locationFormValuesSchema)
+
+type LocationFormValues = z.infer<typeof locationFormValuesSchema>
+
+type LoaderData = {
+  locationFormValues: LocationFormValues
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
   const userLineId = await requireUserLineId(request)
 
   const form = await db.homeIsolationForm.findFirst({
+    select: {
+      id: true,
+      lat: true,
+      lng: true,
+    },
     where: { lineId: userLineId },
   })
   if (!form) {
     throw unprocessableEntity(`You must submit contact before submit location.`)
   }
 
-  return new Response()
+  return json<LoaderData>({
+    locationFormValues: locationFormValuesSchema.parse(form),
+  })
+}
+
+export const action: ActionFunction = async ({ request }) => {
+  const userLineId = await requireUserLineId(request)
+
+  const form = await request.formData()
+  const result = await locationFormValuesValidator.validate(form)
+  if (result.error) {
+    return validationError(result.error)
+  }
+
+  const { data } = result
+  const toUpdateForm = await db.homeIsolationForm.findUnique({
+    where: { id: data.id },
+  })
+
+  if (!toUpdateForm) {
+    throw unprocessableEntity(`You must submit contact before submit location.`)
+  }
+  if (toUpdateForm.lineId !== userLineId) {
+    throw unauthorized(`Can't access formId: '${data.id}'.`)
+  }
+
+  await db.homeIsolationForm.update({
+    data: {
+      lat: data.lat,
+      lng: data.lng,
+    },
+    where: {
+      id: data.id,
+    },
+  })
+
+  lineClient.pushMessage(userLineId, {
+    type: 'text',
+    text: 'Hello, world',
+  })
+
+  return json({})
+}
+
+type MapControl = {
+  center: google.maps.LatLngLiteral
+  zoom: number
+}
+
+const initializeMapControl = (data: LoaderData): MapControl => {
+  const { lat, lng } = data.locationFormValues
+  const center =
+    typeof lat === 'number' && typeof lng === 'number'
+      ? {
+          lat,
+          lng,
+        }
+      : DEFAULT_LOCATION
+
+  return {
+    center,
+    zoom: DEFAULT_ZOOM,
+  }
 }
 
 export default function ContactLocationRoute() {
-  const [marker, setMarker] = React.useState<{
-    location: google.maps.LatLngLiteral
-    zoom: number
-  }>({
-    location: INITIAL_LOCATION,
-    zoom: INITIAL_ZOOM,
+  const data = useLoaderData<LoaderData>()
+  const transition = useTransition()
+  const actionData = useActionData()
+
+  const [isOpenSuccessDialog, setIsOpenSuccessDialog] = React.useState(() => {
+    const { lat, lng } = data.locationFormValues
+    return typeof lat === 'number' && typeof lng === 'number'
+  })
+  const [mapControl, setMapControl] = React.useState<MapControl>(() => {
+    return initializeMapControl(data)
   })
 
   const getCurrentPosition = useGetCurrentPosition()
 
   React.useEffect(
-    function updateMarkerWhenGetCurrentPositionSuccess() {
+    function openSuccessDialogOnSubmitSuccessfully() {
+      if (JSON.stringify(actionData) === '{}') {
+        setIsOpenSuccessDialog(true)
+      }
+    },
+    [actionData]
+  )
+
+  React.useEffect(
+    function emitOnGetCurrentPositionSuccess() {
       const { position } = getCurrentPosition
-      position && setMarker({ location: position, zoom: 17 })
+      position && setMapControl({ center: position, zoom: 17 })
     },
     [getCurrentPosition.position]
   )
 
   const mapIdleHandler = (map: google.maps.Map) => {
     const zoom = map.getZoom()
-    typeof zoom === 'number' && setMarker((prev) => ({ ...prev, zoom }))
+    const center = map.getCenter()?.toJSON()
+
+    setMapControl((prev) => ({
+      zoom: typeof zoom === 'number' ? zoom : prev.zoom,
+      center: typeof center !== 'undefined' ? center : prev.center,
+    }))
   }
 
-  const mapDragHandler = (map: google.maps.Map) => {
-    const location = map.getCenter()?.toJSON()
-    !!location && setMarker((prev) => ({ ...prev, location }))
+  const closeSuccessDialogHandler = () => {
+    setIsOpenSuccessDialog(false)
   }
+
+  const canEdit = transition.state === 'idle'
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        position: 'relative',
-      }}
-    >
-      <div style={{ flexGrow: 1 }}>
-        <ClientOnly>
-          {() => (
-            <Wrapper apiKey={window.ENV.GOOGLE_MAP_API_KEY} render={render}>
-              <Map
-                canInteract={true}
-                style={{ width: '100%', height: '100%' }}
-                fullscreenControl={false}
-                streetViewControl={false}
-                mapTypeControl={false}
-                keyboardShortcuts={false}
-                zoomControl={false}
-                onIdle={mapIdleHandler}
-                onDrag={mapDragHandler}
-                markerPosition={marker.location}
-                zoom={marker.zoom}
-              />
-            </Wrapper>
-          )}
-        </ClientOnly>
-      </div>
+    <>
       <div
         style={{
-          height: 'max-content',
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
           position: 'relative',
-          backgroundColor: 'white',
-          overflow: 'auto',
         }}
       >
-        <div style={{}}>
-          <button
-            onClick={getCurrentPosition.fetch}
-            disabled={getCurrentPosition.state === 'pending'}
-          >
-            {getCurrentPosition.state === 'pending'
-              ? 'กำลังระบุตำแหน่ง...'
-              : 'ตำแหน่งปัจจุบัน'}
-          </button>
-          <div style={{ height: 24 }} />
-          <button
-            className="primary-btn"
-            // onClick={() => setEditingMode(EditingMode.EditForm)}
-          >
-            ยืนยันพิกัด
-          </button>
+        <div style={{ flexGrow: 1 }}>
+          <ClientOnly>
+            {() => (
+              <Wrapper apiKey={window.ENV.GOOGLE_MAP_API_KEY} render={render}>
+                <Map
+                  canInteract={canEdit}
+                  style={{ width: '100%', height: '100%' }}
+                  fullscreenControl={false}
+                  streetViewControl={false}
+                  mapTypeControl={false}
+                  keyboardShortcuts={false}
+                  zoomControl={false}
+                  onIdle={mapIdleHandler}
+                  center={mapControl.center}
+                  zoom={mapControl.zoom}
+                >
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                  >
+                    <LocationPin size="38" color="#de5246" />
+                  </div>
+                </Map>
+              </Wrapper>
+            )}
+          </ClientOnly>
+        </div>
+        <div
+          style={{
+            height: 'max-content',
+            padding: '24px',
+            position: 'relative',
+            backgroundColor: 'white',
+            overflow: 'auto',
+          }}
+        >
+          <div>
+            <button
+              onClick={getCurrentPosition.fetch}
+              disabled={getCurrentPosition.state === 'pending' || !canEdit}
+            >
+              {getCurrentPosition.state === 'pending'
+                ? 'กำลังระบุตำแหน่ง...'
+                : 'ตำแหน่งปัจจุบัน'}
+            </button>
+            <div style={{ height: 24 }} />
+            <Form method="post">
+              <input
+                type="hidden"
+                name="id"
+                value={data.locationFormValues.id}
+              />
+              <input type="hidden" name="lat" value={mapControl.center.lat} />
+              <input type="hidden" name="lng" value={mapControl.center.lng} />
+              <button type="submit" className="primary-btn" disabled={!canEdit}>
+                {transition.state === 'submitting'
+                  ? 'กำลังยืนยันพิกัด...'
+                  : 'ยืนยันพิกัด'}
+              </button>
+            </Form>
+          </div>
         </div>
       </div>
-    </div>
+      <SuccessDialog
+        isOpen={isOpenSuccessDialog}
+        onDismiss={closeSuccessDialogHandler}
+      />
+    </>
   )
 }
 
 const render = (status: Status) => {
   return <div>{status}</div>
+}
+
+const SuccessDialog: React.FC<{ isOpen: boolean; onDismiss?: () => any }> = ({
+  isOpen,
+  onDismiss,
+}) => {
+  const { deviceEnv, closeLiffApp } = useLIFFUtilsBeforeInit()
+
+  return (
+    <AlertDialog isOpen={isOpen}>
+      {/* TODO: Add wizard visualizing number of the registration progress */}
+      <h1 style={{ fontSize: '1.5rem' }}>ขั้นตอนลงทะเบียนสำเร็จ</h1>
+      <p>
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum, cum
+        accusantium quo vero, eaque aliquam quam optio, dolores doloribus sunt
+        ullam doloremque consequuntur mollitia animi nisi dolorum maiores labore
+        molestias?
+      </p>
+      <div style={{ height: '24px' }} />
+      {deviceEnv === 'liff' ? (
+        <button className="primary-btn" onClick={closeLiffApp}>
+          ปิดหน้านี้
+        </button>
+      ) : null}
+      <button type="button" onClick={onDismiss}>
+        แก้ไขพิกัด
+      </button>
+    </AlertDialog>
+  )
 }
