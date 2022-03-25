@@ -76,7 +76,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   })
 }
 
-const USER_PREFERENCE = {
+const DEFAULT_MAP_OPTIONS = {
   center: {
     lat: 8.0294121,
     lng: 99.6502966,
@@ -183,7 +183,7 @@ export default function AdminDashboardRoute() {
           {() => (
             <Wrapper render={render} apiKey={window.ENV.GOOGLE_MAP_API_KEY}>
               <Map
-                userPreference={USER_PREFERENCE}
+                defaultOptions={DEFAULT_MAP_OPTIONS}
                 style={{ width: '100%', height: '100%' }}
                 fullscreenControl={false}
                 streetViewControl={false}

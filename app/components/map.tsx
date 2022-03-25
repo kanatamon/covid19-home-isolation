@@ -5,25 +5,26 @@ interface MapProps extends google.maps.MapOptions {
   style: { [key: string]: string }
   onClick?: (e: google.maps.MapMouseEvent) => void
   markerPosition?: google.maps.LatLngLiteral
-  onMarkerSettled?: (
-    markerPosition: google.maps.LatLngLiteral | undefined
-  ) => void
   canInteract?: boolean
-  userPreference: { center: google.maps.LatLngLiteral; zoom: number }
+  defaultOptions?: { center: google.maps.LatLngLiteral; zoom: number }
+  onIdle?: (map: google.maps.Map) => void
+  onDrag?: (map: google.maps.Map) => void
 }
 
 export const Map: React.FC<MapProps> = ({
+  onIdle,
+  onDrag,
   canInteract = true,
   onClick,
   markerPosition,
-  onMarkerSettled,
   children,
   style,
-  userPreference,
+  defaultOptions = {},
   ...options
 }) => {
   const ref = React.useRef<HTMLDivElement>(null)
   const [map, setMap] = React.useState<google.maps.Map>()
+  // TODO: Remove marker use mock pin-icon and stay at center instead
   const [marker, setMarker] = React.useState<google.maps.Marker>()
 
   React.useEffect(
@@ -31,7 +32,8 @@ export const Map: React.FC<MapProps> = ({
       if (ref.current && !map) {
         const newMap = new window.google.maps.Map(ref.current, {
           ...options,
-          ...userPreference,
+          ...defaultOptions,
+          ...(markerPosition ? { center: markerPosition } : {}),
         })
         setMap(newMap)
       }
@@ -49,18 +51,20 @@ export const Map: React.FC<MapProps> = ({
   React.useEffect(
     function manageEventListeners() {
       if (map) {
-        ;['drag'].forEach((eventName) =>
+        ;['drag', 'idle'].forEach((eventName) =>
           google.maps.event.clearListeners(map, eventName)
         )
 
-        if (onMarkerSettled) {
-          map.addListener('drag', () => {
-            onMarkerSettled(map.getCenter()?.toJSON())
-          })
+        if (onIdle) {
+          map.addListener('idle', () => onIdle(map))
+        }
+
+        if (onDrag) {
+          map.addListener('drag', () => onDrag(map))
         }
       }
     },
-    [map, onMarkerSettled]
+    [map, onIdle, onDrag]
   )
 
   React.useEffect(
@@ -81,18 +85,11 @@ export const Map: React.FC<MapProps> = ({
     function bindMarkerToNewMapCenter() {
       if (marker && map) {
         marker.setMap(map)
-        onMarkerSettled?.(map.getCenter()?.toJSON())
+        onDrag?.(map)
+        onIdle?.(map)
       }
     },
     [map]
-  )
-
-  React.useEffect(
-    function applyUserPreferenceToMap() {
-      map?.setOptions(userPreference)
-      onMarkerSettled?.(userPreference.center)
-    },
-    [userPreference]
   )
 
   React.useEffect(
