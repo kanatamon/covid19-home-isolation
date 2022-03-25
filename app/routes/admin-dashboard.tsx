@@ -5,6 +5,7 @@ import { HomeIsolationForm, Patient, Prisma } from '@prisma/client'
 import { json, LinksFunction, LoaderFunction, useLoaderData } from 'remix'
 import { zfd } from 'zod-form-data'
 
+import { LocationPinData } from '~/components/icons/location-pin'
 import { db } from '~/utils/db.server'
 import { requireAdminPermission } from '~/utils/session.server'
 import { Map } from '~/components/map'
@@ -216,9 +217,9 @@ const render = (status: Status) => {
 }
 
 const PinIcon = {
-  path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
-  width: 16,
-  height: 20,
+  path: LocationPinData.svgPathData,
+  width: LocationPinData.width,
+  height: LocationPinData.height,
 }
 
 const Marker: React.FC<
@@ -285,7 +286,7 @@ const Marker: React.FC<
         fillOpacity: 1,
         strokeWeight: 1,
         strokeColor: '#ffffff',
-        scale: 1.5,
+        scale: 0.065,
       },
     })
   }, [marker, infoWindow, options, data])
