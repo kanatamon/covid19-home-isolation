@@ -92,6 +92,7 @@ export default function NewContactRoute() {
             style={{ padding: '32px 24px', width: '100%', maxWidth: '500px' }}
           >
             <NewHomeIsolationFormEditor
+              action="."
               onSuccess={onNewFormSubmittedSuccessfullyHandler}
               defaultValues={{
                 lineId: profile.userId,

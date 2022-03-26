@@ -89,9 +89,10 @@ export function useHomeIsolationFormValues({
 }
 
 export const NewHomeIsolationFormEditor: React.FC<{
+  action: string
   onSuccess?: () => any
   defaultValues?: Partial<HomeIsolationFormValues>
-}> = ({ onSuccess, defaultValues = {} }) => {
+}> = ({ action, onSuccess, defaultValues = {} }) => {
   const fetcher = useFetcher()
   const methods = useHomeIsolationFormValues({
     defaultValues: {
@@ -116,7 +117,7 @@ export const NewHomeIsolationFormEditor: React.FC<{
     <fetcher.Form
       replace
       method="post"
-      action="/home-isolation-form/new"
+      action={action}
       style={{
         display: 'flex',
         flexDirection: 'column',
