@@ -5,9 +5,11 @@ import {
   ActionFunction,
   Form,
   json,
+  Link,
   LinksFunction,
   LoaderFunction,
   useActionData,
+  useCatch,
   useLoaderData,
   useTransition,
 } from 'remix'
@@ -274,6 +276,43 @@ export default function ContactLocationRoute() {
       />
     </>
   )
+}
+
+export function CatchBoundary() {
+  const { deviceEnv, closeLiffApp } = useLIFFUtilsBeforeInit()
+  const caught = useCatch()
+
+  if (
+    typeof caught.data === 'string' &&
+    caught.data.match(/You must submit contact before submit location/i)
+  ) {
+    return (
+      <AlertDialog isOpen={true}>
+        <p>
+          ท่านยังไม่เคยลงทะเบียนข้อมูลส่วนตัว
+          ไม่สามารถดำเนินการเพื่อบันทึกพิกัดได้ กรุณาลงทะเบียนข้อมูลส่วนตัว
+        </p>
+        <div style={{ height: '24px' }} />
+        <Link to="/contact/new">
+          <button className="primary-btn">ลงทะเบียนข้อมูลส่วนตัว</button>
+        </Link>
+        {deviceEnv === 'liff' ? (
+          <button onClick={closeLiffApp}>ปิดหน้านี้</button>
+        ) : null}
+      </AlertDialog>
+    )
+  }
+  if (caught.status === 401) {
+    return (
+      <AlertDialog isOpen={true}>
+        <p>ท่านไม่มีสิทธิ์เข้าถึงข้อมูลส่วนนี้!</p>
+        <div style={{ height: '24px' }} />
+        {deviceEnv === 'liff' ? (
+          <button onClick={closeLiffApp}>ปิดหน้านี้</button>
+        ) : null}
+      </AlertDialog>
+    )
+  }
 }
 
 const render = (status: Status) => {

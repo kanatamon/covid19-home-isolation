@@ -33,6 +33,10 @@ body {
   font-family: 'Noto Serif Thai', serif;
 }
 
+a {
+  text-decoration: none;
+}
+
 label {
   display: block;
   font-size: 1em;
