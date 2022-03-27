@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React from 'react'
 import { createCustomEqual } from 'fast-equals'
 
 interface MapProps extends google.maps.MapOptions {

@@ -1,15 +1,17 @@
-import * as React from 'react'
+import React from 'react'
 import { ClientOnly } from 'remix-utils'
 import { Status, Wrapper } from '@googlemaps/react-wrapper'
 import { HomeIsolationForm, Patient, Prisma } from '@prisma/client'
 import { json, LinksFunction, LoaderFunction, useLoaderData } from 'remix'
 import { zfd } from 'zod-form-data'
+import { z } from 'zod'
 
 import { LocationPinData } from '~/components/icons/location-pin'
 import { db } from '~/utils/db.server'
 import { requireAdminPermission } from '~/utils/session.server'
 import { Map } from '~/components/map'
 import { HomeIsolationFormSmartView } from '~/components/home-isolation-form-smart-view'
+import { homeIsolationFormValuesSchema } from '~/components/home-isolation-form-editor'
 import {
   calculateRecoveryDay,
   calculateTreatmentScale,
@@ -17,8 +19,6 @@ import {
 } from '~/domain/treatment'
 
 import datePickerStyles from 'react-datepicker/dist/react-datepicker.css'
-import { homeIsolationFormValuesSchema } from '~/components/home-isolation-form-editor'
-import { z } from 'zod'
 
 export const links: LinksFunction = () => [
   { href: datePickerStyles, rel: 'stylesheet' },

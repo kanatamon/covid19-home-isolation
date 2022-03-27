@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React from 'react'
 
 import { calculateTreatmentScale, HEALTH_SHADES } from '~/domain/treatment'
 

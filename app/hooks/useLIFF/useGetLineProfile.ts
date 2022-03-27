@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React from 'react'
 import { useLocation } from 'remix'
 import { useLIFFUtilsBeforeInit } from '.'
 import { liff } from './liff.client'

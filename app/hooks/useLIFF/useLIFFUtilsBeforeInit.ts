@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React from 'react'
 import { liff } from './liff.client'
 
 type DeviceEnv = 'undecided' | 'browser' | 'liff'
