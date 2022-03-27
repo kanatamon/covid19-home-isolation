@@ -10,7 +10,7 @@ export function useLIFFUtilsBeforeInit() {
     setDeviceEnv(liff.isInClient() ? 'liff' : 'browser')
   }, [])
 
-  const closeLiffApp = () => {
+  const closeApp = () => {
     if (deviceEnv === 'liff') {
       liff.closeWindow()
     }
@@ -18,6 +18,6 @@ export function useLIFFUtilsBeforeInit() {
 
   return {
     deviceEnv,
-    closeLiffApp,
+    closeApp: closeApp,
   }
 }

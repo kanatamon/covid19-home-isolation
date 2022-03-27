@@ -89,7 +89,7 @@ export default function FormResponseRoute() {
           </Link>{' '}
         </>
       ) : (
-        <button onClick={liffUtils.closeLiffApp}>Close</button>
+        <button onClick={liffUtils.closeApp}>Close</button>
       )}
     </div>
   )

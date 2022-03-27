@@ -9,7 +9,7 @@ import {
 } from 'remix'
 import { validationError } from 'remix-validated-form'
 
-import { useGetLineProfile, useLIFFUtilsBeforeInit } from '~/hooks/useLIFF'
+import { useGetLINEProfile, useLIFFUtilsBeforeInit } from '~/hooks/useLIFF'
 import { requireUserLineId } from '~/utils/session.server'
 import { db } from '~/utils/db.server'
 import { calculateTreatmentDayCount } from '~/domain/treatment'
@@ -72,7 +72,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 
 export default function NewContactRoute() {
   const [isOpenSuccessDialog, setIsOpenSuccessDialog] = useState(false)
-  const { profile } = useGetLineProfile()
+  const { profile } = useGetLINEProfile()
 
   const onNewFormSubmittedSuccessfullyHandler = () => {
     setIsOpenSuccessDialog(true)
@@ -117,7 +117,7 @@ export default function NewContactRoute() {
 }
 
 export function CatchBoundary() {
-  const { deviceEnv, closeLiffApp } = useLIFFUtilsBeforeInit()
+  const { deviceEnv, closeApp } = useLIFFUtilsBeforeInit()
   const caught = useCatch()
 
   if (
@@ -129,7 +129,7 @@ export function CatchBoundary() {
         <p>ท่านเคยลงทะเบียนเรียบร้อยแล้ว ไม่สามารถลงทะเบียนซ้ำได้</p>
         <div style={{ height: '24px' }} />
         {deviceEnv === 'liff' ? (
-          <button onClick={closeLiffApp}>ปิดหน้านี้</button>
+          <button onClick={closeApp}>ปิดหน้านี้</button>
         ) : null}
       </AlertDialog>
     )
@@ -137,7 +137,7 @@ export function CatchBoundary() {
 }
 
 const SuccessNewFormDialog: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
-  const { deviceEnv, closeLiffApp } = useLIFFUtilsBeforeInit()
+  const { deviceEnv, closeApp } = useLIFFUtilsBeforeInit()
 
   return (
     <AlertDialog isOpen={isOpen}>
@@ -151,7 +151,7 @@ const SuccessNewFormDialog: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
       </p>
       <div style={{ height: '24px' }} />
       {deviceEnv === 'liff' ? (
-        <button onClick={closeLiffApp}>ปิดหน้านี้</button>
+        <button onClick={closeApp}>ปิดหน้านี้</button>
       ) : null}
     </AlertDialog>
   )

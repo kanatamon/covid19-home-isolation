@@ -279,7 +279,7 @@ export default function ContactLocationRoute() {
 }
 
 export function CatchBoundary() {
-  const { deviceEnv, closeLiffApp } = useLIFFUtilsBeforeInit()
+  const { deviceEnv, closeApp } = useLIFFUtilsBeforeInit()
   const caught = useCatch()
 
   if (
@@ -297,7 +297,7 @@ export function CatchBoundary() {
           <button className="primary-btn">ลงทะเบียนข้อมูลส่วนตัว</button>
         </Link>
         {deviceEnv === 'liff' ? (
-          <button onClick={closeLiffApp}>ปิดหน้านี้</button>
+          <button onClick={closeApp}>ปิดหน้านี้</button>
         ) : null}
       </AlertDialog>
     )
@@ -308,7 +308,7 @@ export function CatchBoundary() {
         <p>ท่านไม่มีสิทธิ์เข้าถึงข้อมูลส่วนนี้!</p>
         <div style={{ height: '24px' }} />
         {deviceEnv === 'liff' ? (
-          <button onClick={closeLiffApp}>ปิดหน้านี้</button>
+          <button onClick={closeApp}>ปิดหน้านี้</button>
         ) : null}
       </AlertDialog>
     )
@@ -323,7 +323,7 @@ const SuccessDialog: React.FC<{ isOpen: boolean; onDismiss?: () => any }> = ({
   isOpen,
   onDismiss,
 }) => {
-  const { deviceEnv, closeLiffApp } = useLIFFUtilsBeforeInit()
+  const { deviceEnv, closeApp } = useLIFFUtilsBeforeInit()
 
   return (
     <AlertDialog isOpen={isOpen}>
@@ -337,7 +337,7 @@ const SuccessDialog: React.FC<{ isOpen: boolean; onDismiss?: () => any }> = ({
       </p>
       <div style={{ height: '24px' }} />
       {deviceEnv === 'liff' ? (
-        <button className="primary-btn" onClick={closeLiffApp}>
+        <button className="primary-btn" onClick={closeApp}>
           ปิดหน้านี้
         </button>
       ) : null}

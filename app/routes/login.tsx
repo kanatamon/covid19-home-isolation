@@ -7,7 +7,7 @@ import {
   useSubmit,
 } from 'remix'
 import { badRequest } from 'remix-utils'
-import { useGetLineProfile } from '~/hooks/useLIFF'
+import { useGetLINEProfile } from '~/hooks/useLIFF'
 import { createUserSession, getUserLineId } from '~/utils/session.server'
 
 export const action: ActionFunction = async ({ request }) => {
@@ -49,7 +49,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 export default function LoginRoute() {
   const submit = useSubmit()
   const formRef = React.useRef<HTMLFormElement>(null)
-  const { shouldLoginManually, login, idToken } = useGetLineProfile()
+  const { shouldLoginManually, login, idToken } = useGetLINEProfile()
 
   React.useEffect(
     function () {

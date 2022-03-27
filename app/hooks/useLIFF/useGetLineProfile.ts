@@ -16,7 +16,7 @@ type Profile = {
   pictureUrl?: string
 }
 
-export function useGetLineProfile() {
+export function useGetLINEProfile() {
   const { deviceEnv } = useLIFFUtilsBeforeInit()
 
   // TODO: Refactor to useReducer?

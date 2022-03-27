@@ -11,7 +11,7 @@ import {
 
 import { db } from '~/utils/db.server'
 import { requireUserLineId } from '~/utils/session.server'
-import { useGetLineProfile } from '~/hooks/useLIFF'
+import { useGetLINEProfile } from '~/hooks/useLIFF'
 
 type LoaderData = {
   homeIsolationForms: (HomeIsolationForm & { patients: Patient[] })[]
@@ -30,7 +30,7 @@ export default function Index() {
   const submit = useSubmit()
   const transition = useTransition()
   const data = useLoaderData<LoaderData>()
-  const { deviceEnv, logout } = useGetLineProfile()
+  const { deviceEnv, logout } = useGetLINEProfile()
   const formRef = useRef<HTMLFormElement>(null)
 
   const logoutHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
