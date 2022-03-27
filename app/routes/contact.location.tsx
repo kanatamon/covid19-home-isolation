@@ -191,7 +191,7 @@ export default function ContactLocationRoute() {
     setIsOpenSuccessDialog(false)
   }
 
-  const canEdit = transition.state === 'idle'
+  const canEdit = transition.state === 'idle' && !isOpenSuccessDialog
 
   return (
     <>
@@ -342,14 +342,16 @@ const SuccessDialog: React.FC<{ isOpen: boolean; onDismiss?: () => any }> = ({
         molestias?
       </p>
       <div style={{ height: '24px' }} />
-      {deviceEnv === 'liff' ? (
-        <button className="primary-btn" onClick={closeApp}>
-          ปิดหน้านี้
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {deviceEnv === 'liff' ? (
+          <button className="primary-btn" onClick={closeApp}>
+            ปิดหน้านี้
+          </button>
+        ) : null}
+        <button type="button" onClick={onDismiss}>
+          แก้ไขพิกัด
         </button>
-      ) : null}
-      <button type="button" onClick={onDismiss}>
-        แก้ไขพิกัด
-      </button>
+      </div>
     </AlertDialog>
   )
 }

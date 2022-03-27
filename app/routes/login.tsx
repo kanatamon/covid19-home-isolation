@@ -48,7 +48,23 @@ type LoaderData = {
   searchParams: Record<string, string>
 }
 
+function redirectToWhereLIFFStateRequireToVisit(request: Request) {
+  const url = new URL(request.url)
+  const liffState = url.searchParams.get('liff.state')
+  if (!liffState) {
+    return
+  }
+
+  const searchParams = new URLSearchParams(liffState)
+  const visitTo = searchParams.get('visitTo')
+  if (visitTo) {
+    throw redirect(visitTo)
+  }
+}
+
 export const loader: LoaderFunction = async ({ request }) => {
+  redirectToWhereLIFFStateRequireToVisit(request)
+
   const userLineId = await getUserLineId(request)
   if (userLineId) {
     return redirect('/')
