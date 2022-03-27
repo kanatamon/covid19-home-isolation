@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useLocation } from 'remix'
 import { useLIFFUtilsBeforeInit } from '.'
 import { liff } from './liff.client'
 
@@ -17,6 +18,7 @@ type Profile = {
 }
 
 export function useGetLINEProfile() {
+  const location = useLocation()
   const { deviceEnv } = useLIFFUtilsBeforeInit()
 
   // TODO: Refactor to useReducer?
@@ -111,7 +113,7 @@ export function useGetLINEProfile() {
 
   const login = () => {
     if (deviceEnv === 'browser' && !isLoggedIn) {
-      liff.login()
+      liff.login({ redirectUri: window.location.href })
     }
   }
 
