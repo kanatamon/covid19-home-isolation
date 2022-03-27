@@ -124,9 +124,10 @@ export function CatchBoundary() {
     typeof caught.data === 'string' &&
     caught.data.match(/You've already create contact/i)
   ) {
+    const id = 'error-alert'
     return (
-      <AlertDialog isOpen={true}>
-        <p>ท่านเคยลงทะเบียนเรียบร้อยแล้ว ไม่สามารถลงทะเบียนซ้ำได้</p>
+      <AlertDialog isOpen={true} ariaLabelledBy={id}>
+        <p id={id}>ท่านเคยลงทะเบียนเรียบร้อยแล้ว ไม่สามารถลงทะเบียนซ้ำได้</p>
         <div style={{ height: '24px' }} />
         {deviceEnv === 'liff' ? (
           <button onClick={closeApp}>ปิดหน้านี้</button>
@@ -139,10 +140,14 @@ export function CatchBoundary() {
 const SuccessNewFormDialog: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
   const { deviceEnv, closeApp } = useLIFFUtilsBeforeInit()
 
+  const id = 'success-alert'
+
   return (
-    <AlertDialog isOpen={isOpen}>
+    <AlertDialog isOpen={isOpen} ariaLabelledBy={id}>
       {/* TODO: Add wizard visualizing number of the registration progress */}
-      <h1 style={{ fontSize: '1.5rem' }}>ขั้นตอนลงทะเบียนสำเร็จ</h1>
+      <h1 style={{ fontSize: '1.5rem' }} id={id}>
+        ขั้นตอนลงทะเบียนสำเร็จ
+      </h1>
       <p>
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum, cum
         accusantium quo vero, eaque aliquam quam optio, dolores doloribus sunt

@@ -286,9 +286,10 @@ export function CatchBoundary() {
     typeof caught.data === 'string' &&
     caught.data.match(/You must submit contact before submit location/i)
   ) {
+    const id = 'error-alert'
     return (
-      <AlertDialog isOpen={true}>
-        <p>
+      <AlertDialog isOpen={true} ariaLabelledBy={id}>
+        <p id={id}>
           ท่านยังไม่เคยลงทะเบียนข้อมูลส่วนตัว
           ไม่สามารถดำเนินการเพื่อบันทึกพิกัดได้ กรุณาลงทะเบียนข้อมูลส่วนตัว
         </p>
@@ -303,9 +304,10 @@ export function CatchBoundary() {
     )
   }
   if (caught.status === 401) {
+    const id = 'error-alert'
     return (
-      <AlertDialog isOpen={true}>
-        <p>ท่านไม่มีสิทธิ์เข้าถึงข้อมูลส่วนนี้!</p>
+      <AlertDialog isOpen={true} ariaLabelledBy={id}>
+        <p id={id}>ท่านไม่มีสิทธิ์เข้าถึงข้อมูลส่วนนี้!</p>
         <div style={{ height: '24px' }} />
         {deviceEnv === 'liff' ? (
           <button onClick={closeApp}>ปิดหน้านี้</button>
@@ -325,10 +327,14 @@ const SuccessDialog: React.FC<{ isOpen: boolean; onDismiss?: () => any }> = ({
 }) => {
   const { deviceEnv, closeApp } = useLIFFUtilsBeforeInit()
 
+  const id = 'success-alert'
+
   return (
-    <AlertDialog isOpen={isOpen}>
+    <AlertDialog isOpen={isOpen} ariaLabelledBy={id}>
       {/* TODO: Add wizard visualizing number of the registration progress */}
-      <h1 style={{ fontSize: '1.5rem' }}>ขั้นตอนลงทะเบียนสำเร็จ</h1>
+      <h1 style={{ fontSize: '1.5rem' }} id={id}>
+        ขั้นตอนลงทะเบียนสำเร็จ
+      </h1>
       <p>
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum, cum
         accusantium quo vero, eaque aliquam quam optio, dolores doloribus sunt
