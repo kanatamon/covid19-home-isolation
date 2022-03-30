@@ -43,8 +43,7 @@ export namespace activeTreatmentPeriod {
     if (dayOffset > FULL_TREATMENT_DAYS) {
       console.warn(`'dayOffset' should be in range [0, ${FULL_TREATMENT_DAYS}]`)
     }
-    const firstDay = getToday().subtract(FULL_TREATMENT_DAYS, 'days')
-    return firstDay.add(dayOffset, 'days')
+    return getToday().subtract(FULL_TREATMENT_DAYS - dayOffset, 'days')
   }
 
   export function getDateSinceFirstDay(dayOffset: number): Date {
