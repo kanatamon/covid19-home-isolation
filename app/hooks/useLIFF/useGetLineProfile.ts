@@ -1,6 +1,5 @@
 import React from 'react'
-import { useLocation } from 'remix'
-import { useLIFFUtilsBeforeInit } from '.'
+import { useLIFFUtilsBeforeInit } from './useLIFFUtilsBeforeInit'
 import { liff } from './liff.client'
 
 type State =
@@ -18,7 +17,6 @@ type Profile = {
 }
 
 export function useGetLINEProfile() {
-  const location = useLocation()
   const { deviceEnv } = useLIFFUtilsBeforeInit()
 
   // TODO: Refactor to useReducer?

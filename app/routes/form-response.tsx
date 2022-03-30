@@ -1,7 +1,6 @@
 import { Link } from 'remix'
 import QRCode from 'qrcode.react'
-
-import { useLIFFUtilsBeforeInit } from '~/hooks/useLIFF'
+import { useLIFFUtilsBeforeInit } from '~/hooks/useLIFF/useLIFFUtilsBeforeInit'
 
 const linkToGroup =
   'https://liff.line.me/1645278921-kWRPP32q/?accountId=510lxrso'

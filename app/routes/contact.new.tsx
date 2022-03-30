@@ -21,7 +21,7 @@ import { AlertDialog } from '~/components/alert-dialog'
 
 import datePickerStyles from 'react-datepicker/dist/react-datepicker.css'
 import dialogStyles from '@reach/dialog/styles.css'
-import { useGetLINEProfile } from '~/hooks/useLIFF/useGetLINEProfile'
+import { useGetLINEProfile } from '~/hooks/useLIFF/useGetLineProfile'
 import { useLIFFUtilsBeforeInit } from '~/hooks/useLIFF/useLIFFUtilsBeforeInit'
 
 export const links: LinksFunction = () => [
