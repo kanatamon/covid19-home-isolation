@@ -2,7 +2,11 @@ import { FlexMessage } from '@line/bot-sdk'
 import { ActionFunction, json } from 'remix'
 
 import { db } from '~/utils/db.server'
-import { errorHandler, lineClient } from '~/utils/line-client.server'
+import {
+  errorHandler,
+  lineClient,
+  VISIT_CONTACT_LOCATION_LIFF_URL,
+} from '~/utils/line-client.server'
 import { requireWebhookSignature } from '~/utils/webhook.server'
 
 export const action: ActionFunction = async ({ request }) => {
@@ -67,14 +71,14 @@ const notifyMessage: FlexMessage = {
     },
     hero: {
       type: 'image',
-      url: 'https://via.placeholder.com/500',
+      url: 'https://res.cloudinary.com/domumsbbo/image/upload/v1648638420/henry-perks-BJXAxQ1L7dI-unsplash_oscsk8.jpg',
       size: 'full',
       aspectRatio: '16:9',
       aspectMode: 'cover',
       action: {
         label: 'ลงทะเบียนตำแหน่งที่พักอาศัย',
         type: 'uri',
-        uri: 'https://liff.line.me/1656954202-jgbJkB1J?visitTo=%2Fcontact%2Flocation',
+        uri: VISIT_CONTACT_LOCATION_LIFF_URL,
       },
     },
     body: {
@@ -109,7 +113,7 @@ const notifyMessage: FlexMessage = {
           action: {
             type: 'uri',
             label: 'ลงทะเบียนตำแหน่งที่พักอาศัย',
-            uri: 'https://liff.line.me/1656954202-jgbJkB1J?visitTo=%2Fcontact%2Flocation',
+            uri: VISIT_CONTACT_LOCATION_LIFF_URL,
           },
         },
       ],
@@ -117,7 +121,7 @@ const notifyMessage: FlexMessage = {
     action: {
       type: 'uri',
       label: 'action',
-      uri: 'https://liff.line.me/1656954202-jgbJkB1J?visitTo=%2Fcontact%2Flocation',
+      uri: VISIT_CONTACT_LOCATION_LIFF_URL,
     },
     styles: {
       footer: {

@@ -10,19 +10,23 @@ import {
 import { json } from 'remix'
 import { badRequest } from 'remix-utils'
 
-const channelAccessToken = process.env.CHANEL_ACCESS_TOKEN
-const channelSecret = process.env.CHANEL_SECRET
+const CHANNEL_ACCESS_TOKEN = process.env.CHANEL_ACCESS_TOKEN
+const CHANNEL_SECRET = process.env.CHANEL_SECRET
+const LIFF_ID = process.env.LIFF_ID
 
 if (
-  typeof channelAccessToken !== 'string' ||
-  typeof channelSecret !== 'string'
+  typeof CHANNEL_ACCESS_TOKEN !== 'string' ||
+  typeof CHANNEL_SECRET !== 'string' ||
+  typeof LIFF_ID !== 'string'
 ) {
-  throw new Error('CHANEL_ACCESS_TOKEN and CHANEL_SECRET must be set!')
+  throw new Error(
+    'LIFF_ID, CHANEL_ACCESS_TOKEN, and CHANEL_SECRET must be set!'
+  )
 }
 
 const config: ClientConfig = {
-  channelAccessToken,
-  channelSecret,
+  channelAccessToken: CHANNEL_ACCESS_TOKEN,
+  channelSecret: CHANNEL_SECRET,
 }
 
 const lineClient = new Client(config)
@@ -53,4 +57,7 @@ function errorHandler(error: unknown) {
   throw badRequest({ message: 'Messaging API Error' })
 }
 
-export { lineClient, errorHandler }
+const LIFF_URL = `https://liff.line.me/${LIFF_ID}`
+const VISIT_CONTACT_LOCATION_LIFF_URL = `${LIFF_URL}?visitTo=%2Fcontact%2Flocation`
+
+export { lineClient, errorHandler, VISIT_CONTACT_LOCATION_LIFF_URL }
