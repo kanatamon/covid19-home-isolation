@@ -24,7 +24,7 @@ import { requireUserLineId } from '~/utils/session.server'
 import { Map } from '~/components/map'
 import { homeIsolationFormValuesSchema } from '~/components/home-isolation-form-editor'
 import { validationError } from 'remix-validated-form'
-import { useLIFFUtilsBeforeInit } from '~/hooks/useLIFF'
+import { useLIFFUtilsBeforeInit } from '~/hooks/useLIFF/useLIFFUtilsBeforeInit'
 import { AlertDialog } from '~/components/alert-dialog'
 
 import dialogStyles from '@reach/dialog/styles.css'

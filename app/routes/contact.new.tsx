@@ -9,7 +9,6 @@ import {
 } from 'remix'
 import { validationError } from 'remix-validated-form'
 
-import { useGetLINEProfile, useLIFFUtilsBeforeInit } from '~/hooks/useLIFF'
 import { requireUserLineId } from '~/utils/session.server'
 import { db } from '~/utils/db.server'
 import { calculateTreatmentDayCount } from '~/domain/treatment'
@@ -22,6 +21,8 @@ import { AlertDialog } from '~/components/alert-dialog'
 
 import datePickerStyles from 'react-datepicker/dist/react-datepicker.css'
 import dialogStyles from '@reach/dialog/styles.css'
+import { useGetLINEProfile } from '~/hooks/useLIFF/useGetLINEProfile'
+import { useLIFFUtilsBeforeInit } from '~/hooks/useLIFF/useLIFFUtilsBeforeInit'
 
 export const links: LinksFunction = () => [
   { href: datePickerStyles, rel: 'stylesheet' },

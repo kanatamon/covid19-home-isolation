@@ -11,7 +11,7 @@ import {
 
 import { db } from '~/utils/db.server'
 import { requireUserLineId } from '~/utils/session.server'
-import { useGetLINEProfile } from '~/hooks/useLIFF'
+import { useGetLINEProfile } from '~/hooks/useLIFF/useGetLINEProfile'
 
 type LoaderData = {
   homeIsolationForms: (HomeIsolationForm & { patients: Patient[] })[]

@@ -10,7 +10,7 @@ import {
   useTransition,
 } from 'remix'
 import { badRequest } from 'remix-utils'
-import { useGetLINEProfile } from '~/hooks/useLIFF'
+import { useGetLINEProfile } from '~/hooks/useLIFF/useGetLINEProfile'
 import { createUserSession, getUserLineId } from '~/utils/session.server'
 
 export const action: ActionFunction = async ({ request }) => {
