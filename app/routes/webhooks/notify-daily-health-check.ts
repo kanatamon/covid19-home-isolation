@@ -12,6 +12,7 @@ import {
   ContactsFetcher,
   genNowDisplayNotifyTime,
 } from '~/domain/notify-message.server'
+import moment from 'moment'
 
 export const action: ActionFunction = async ({ request }) => {
   await requireWebhookSignature(request)
@@ -52,9 +53,10 @@ const contactFetcher: ContactsFetcher = async () => {
       admittedAt: true,
     },
     where: {
-      // admittedAt: {
-      //   gte: activeTreatmentPeriod.getDateSinceFirstDay(1),
-      // },
+      admittedAt: {
+        gte: activeTreatmentPeriod.getDateSinceFirstDay(1),
+        lt: moment().startOf('day').toDate(),
+      },
       NOT: { lineId: null },
     },
   })
