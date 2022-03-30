@@ -1,5 +1,6 @@
 import { json } from 'remix'
 import crypto from 'crypto'
+import { getUserRole } from './session.server'
 
 const webhookSecret = process.env.WEBHOOK_SECRET
 if (!webhookSecret) {
@@ -8,6 +9,11 @@ if (!webhookSecret) {
 export async function requireWebhookSignature(request: Request) {
   if (request.method !== 'POST') {
     return json({ message: 'Method not allowed' }, 405)
+  }
+
+  const userRole = await getUserRole(request)
+  if (userRole === 'admin') {
+    return
   }
 
   const payload = await request.json()

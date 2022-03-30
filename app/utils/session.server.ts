@@ -1,5 +1,7 @@
 import { createCookieSessionStorage, redirect } from 'remix'
 
+type UserRole = 'admin'
+
 type LoginForm = {
   username: string
   password: string
@@ -39,15 +41,26 @@ function getUserSession(request: Request) {
 export async function requireAdminPermission(
   request: Request,
   redirectTo: string = new URL(request.url).pathname
-) {
-  const session = await getUserSession(request)
-  const userRole = session.get('role')
-  if (!userRole || typeof userRole !== 'string' || userRole !== 'admin') {
+): Promise<UserRole> {
+  const userRole = await getUserRole(request)
+  if (userRole !== 'admin') {
     const searchParams = new URLSearchParams([['redirectTo', redirectTo]])
     throw redirect(`/login-as-admin?${searchParams}`)
   }
-
   return userRole
+}
+
+export async function getUserRole(request: Request): Promise<UserRole | null> {
+  const session = await getUserSession(request)
+  const userRole = session.get('role')
+  if (!validateUserRole(userRole)) {
+    return null
+  }
+  return userRole
+}
+
+function validateUserRole(role: unknown): role is UserRole {
+  return typeof role === 'string' && ['admin'].includes(role)
 }
 
 export async function getUserLineId(request: Request) {
