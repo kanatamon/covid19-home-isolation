@@ -115,9 +115,16 @@ export const action: ActionFunction = async ({ request }) => {
     },
   })
 
+  const displayName = toUpdateForm.lineDisplayName
+
   lineClient.pushMessage(userLineId, {
     type: 'text',
-    text: 'Hello, world',
+    text: [
+      `ขอบคุณ ${displayName} ท่านได้ลงทะเบียน สำเร็จแล้ว!!`,
+      '',
+      `กรุณา ${displayName} อย่าลืม ส่งรูป วัดอุณหภูมิ / ค่า ออกซิเจน`,
+      'ของเวลา 07.00 น  และ  15.00 น เป็นประจำทุกวันน่ะครับ',
+    ].join('\n'),
   })
 
   return json({})

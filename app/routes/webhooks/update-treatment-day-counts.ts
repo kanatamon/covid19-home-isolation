@@ -4,7 +4,7 @@ import { json } from 'remix'
 import { db } from '~/utils/db.server'
 import {
   calculateTreatmentDayCount,
-  getFirstDayOfActiveTreatmentPeriod,
+  activeTreatmentPeriod,
 } from '~/domain/treatment'
 import { requireWebhookSignature } from '~/utils/webhook.server'
 
@@ -19,7 +19,7 @@ export const action: ActionFunction = async ({ request }) => {
     },
     where: {
       admittedAt: {
-        gte: getFirstDayOfActiveTreatmentPeriod(),
+        gte: activeTreatmentPeriod.getFirstDate(),
       },
     },
   })
