@@ -2,7 +2,13 @@ import React from 'react'
 import { ClientOnly } from 'remix-utils'
 import { Status, Wrapper } from '@googlemaps/react-wrapper'
 import { HomeIsolationForm, Patient, Prisma } from '@prisma/client'
-import { json, LinksFunction, LoaderFunction, useLoaderData } from 'remix'
+import {
+  json,
+  LinksFunction,
+  LoaderFunction,
+  useFetcher,
+  useLoaderData,
+} from 'remix'
 import { zfd } from 'zod-form-data'
 import { z } from 'zod'
 
@@ -131,6 +137,7 @@ export default function AdminDashboardRoute() {
         display: 'flex',
         height: '100%',
         position: 'relative',
+        isolation: 'isolate',
       }}
     >
       <div
@@ -140,16 +147,34 @@ export default function AdminDashboardRoute() {
           overflow: 'auto',
           padding: 12,
           backgroundColor: 'whitesmoke',
+          position: 'relative',
         }}
       >
+        <div
+          style={{
+            position: 'sticky',
+            margin: '-12px -12px 0px -12px',
+            background: 'white',
+            top: -12,
+            left: 0,
+            padding: 12,
+            borderBottom: '1px solid darkgrey',
+            isolation: 'isolate',
+            zIndex: 10,
+          }}
+        >
+          <NotifyPanel />
+        </div>
         <ul
           style={{
             listStyle: 'none',
-            padding: 0,
+            padding: '12px 0px',
             margin: 0,
             display: 'flex',
             flexDirection: 'column',
             gap: 24,
+            isolation: 'isolate',
+            zIndex: 1,
           }}
         >
           {homeIsolationForms.map((form) => {
@@ -339,4 +364,79 @@ const Marker: React.FC<
   }, [isSpotted, data, infoWindow, marker])
 
   return null
+}
+
+const NotifyPanel: React.FC = () => {
+  const askLocationFetcher = useFetcher()
+  const treatmentStatusFetcher = useFetcher()
+  const healthCheckFetcher = useFetcher()
+  const preRecoveryFetcher = useFetcher()
+  const recoveryFetcher = useFetcher()
+
+  return (
+    <div style={{ display: 'flex', gap: 8 }}>
+      <askLocationFetcher.Form
+        method="post"
+        action="/webhooks/notify-contact-location-submission"
+      >
+        <ActionBtn disabled={askLocationFetcher.state === 'submitting'}>
+          Ask Location
+        </ActionBtn>
+      </askLocationFetcher.Form>
+      <treatmentStatusFetcher.Form
+        method="post"
+        action="/webhooks/notify-daily-treatment-status"
+      >
+        <ActionBtn disabled={treatmentStatusFetcher.state === 'submitting'}>
+          Treatment Status
+        </ActionBtn>
+      </treatmentStatusFetcher.Form>
+      <healthCheckFetcher.Form
+        method="post"
+        action="/webhooks/notify-daily-health-check"
+      >
+        <ActionBtn disabled={healthCheckFetcher.state === 'submitting'}>
+          Health Check
+        </ActionBtn>
+      </healthCheckFetcher.Form>
+      <preRecoveryFetcher.Form
+        method="post"
+        action="/webhooks/notify-end-of-treatment?notifyType=PREPARE_TO_END_TREATMENT"
+      >
+        <ActionBtn disabled={preRecoveryFetcher.state === 'submitting'}>
+          Pre-Recovery
+        </ActionBtn>
+      </preRecoveryFetcher.Form>
+      <recoveryFetcher.Form
+        method="post"
+        action="/webhooks/notify-end-of-treatment?notifyType=END_TREATMENT"
+      >
+        <ActionBtn disabled={recoveryFetcher.state === 'submitting'}>
+          Recovery
+        </ActionBtn>
+      </recoveryFetcher.Form>
+    </div>
+  )
+}
+
+const ActionBtn: React.FC<
+  React.DetailedHTMLProps<
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
+    HTMLButtonElement
+  >
+> = ({ children, style, ...other }) => {
+  return (
+    <button
+      {...other}
+      style={{
+        ...style,
+        fontSize: 'var(--btn-font-size)',
+        flex: '1 1 0',
+        fontWeight: 'bold',
+        padding: 'revert',
+      }}
+    >
+      {children}
+    </button>
+  )
 }
