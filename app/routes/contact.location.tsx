@@ -4,6 +4,7 @@ import React from 'react'
 import {
   ActionFunction,
   Form,
+  HeadersFunction,
   json,
   Link,
   LinksFunction,
@@ -34,6 +35,12 @@ const DEFAULT_ZOOM = 14
 const DEFAULT_LOCATION = {
   lat: 8.0294121,
   lng: 99.6502966,
+}
+
+export const headers: HeadersFunction = ({ loaderHeaders, parentHeaders }) => {
+  return {
+    'Cache-Control': 'max-age=3600, s-maxage=216000',
+  }
 }
 
 export const links: LinksFunction = () => [

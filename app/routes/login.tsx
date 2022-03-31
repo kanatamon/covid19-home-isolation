@@ -8,10 +8,17 @@ import {
   useLoaderData,
   useSubmit,
   useTransition,
+  HeadersFunction,
 } from 'remix'
 import { badRequest } from 'remix-utils'
 import { useGetLINEProfile } from '~/hooks/useLIFF/useGetLineProfile'
 import { createUserSession, getUserLineId } from '~/utils/session.server'
+
+export const headers: HeadersFunction = ({ loaderHeaders, parentHeaders }) => {
+  return {
+    'Cache-Control': 'no-cache',
+  }
+}
 
 export const action: ActionFunction = async ({ request }) => {
   const form = await request.formData()
