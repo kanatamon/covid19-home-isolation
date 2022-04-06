@@ -1,9 +1,10 @@
 import chroma from 'chroma-js'
 import moment, { Moment } from 'moment'
 
-const CERT_AVAILABLE_DAYS_OFFSET_AFTER_RECOVERY = 1
-const DAYS_OFFSET_BEFORE_RECOVERY_TO_BE_SERVICED = 1
+const CERT_AVAILABLE_DAYS = 12
+const SERVICE_DAY = 6
 export const FULL_TREATMENT_DAYS = 7
+const FULL_HOME_ISOLATION_DAYS = 10
 export const HEALTH_SHADES = ['#f7797d', '#fbd786', '#c6ffdd']
 
 export const calculateTreatmentDayCount = (admittedAt: Date) => {
@@ -62,24 +63,22 @@ export class Treatment {
     this.admittedDay = moment(admittedDate)
   }
 
+  public getEndHomeIsolationDate(): Date {
+    return moment(this.admittedDay)
+      .add(FULL_HOME_ISOLATION_DAYS, 'days')
+      .toDate()
+  }
+
   public getRecoveryDate(): Date {
-    return this.getRecoveryDay().toDate()
+    return moment(this.admittedDay).add(FULL_TREATMENT_DAYS, 'days').toDate()
   }
 
   public getCertAvailableDate(): Date {
-    return this.getRecoveryDay()
-      .add(CERT_AVAILABLE_DAYS_OFFSET_AFTER_RECOVERY, 'days')
-      .toDate()
+    return moment(this.admittedDay).add(CERT_AVAILABLE_DAYS, 'days').toDate()
   }
 
   public getLastServiceDate(): Date {
-    return this.getRecoveryDay()
-      .subtract(DAYS_OFFSET_BEFORE_RECOVERY_TO_BE_SERVICED, 'days')
-      .toDate()
-  }
-
-  private getRecoveryDay(): Moment {
-    return moment(this.admittedDay).add(FULL_TREATMENT_DAYS, 'days')
+    return moment(this.admittedDay).add(SERVICE_DAY, 'days').toDate()
   }
 }
 

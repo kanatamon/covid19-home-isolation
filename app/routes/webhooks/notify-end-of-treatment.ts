@@ -95,6 +95,7 @@ async function notifyContact(contact: Contact) {
     displayName: contact.lineDisplayName,
     admittedDay: formatDisplayDate(contact.admittedAt),
     recoveryDay: formatDisplayDate(treatment.getRecoveryDate()),
+    endHomeIsolationDay: formatDisplayDate(treatment.getEndHomeIsolationDate()),
     certAvailableDay: formatDisplayDate(treatment.getCertAvailableDate()),
     lastServiceDay: formatDisplayDate(treatment.getLastServiceDate()),
   })
@@ -110,28 +111,32 @@ function generateNotifyMessage({
   displayName,
   admittedDay,
   recoveryDay,
+  endHomeIsolationDay,
   certAvailableDay,
   lastServiceDay,
 }: {
   displayName: string | null
   admittedDay: string
   recoveryDay: string
+  endHomeIsolationDay: string
   certAvailableDay: string
   lastServiceDay: string
 }): TextMessage {
-  const displayNameOrNothing = displayName ? ` คุณ${displayName} ` : ''
+  const displayNameOrNothing = displayName ? `คุณ${displayName}` : ''
 
   return {
     type: 'text',
     text: [
-      `❇️ แจ้งคนไข้${displayNameOrNothing}ครบกักตัวระบบดูแลที่บ้าน HI รพค่ายเทพสตรี`,
-      `✅ เข้าระบบ วันที่ ${admittedDay}`,
-      `✅ ครบกักตัว วันที่ ${recoveryDay}`,
-      'สามารถใช้ชีวิตตามปกติภายใต้มาตรการ ระบบวิถีชีวิตใหม่  ใส่หน้ากากอนามัย ล้างมือ เว้นระยะห่าง',
-      `✳️ คนไข้สามารถมารับ ใบรับแพทย์ พร้อมผลตรวจโควิดในวันที่ ${certAvailableDay} ณ ห้องศูนย์ประสานงานระบบดูแลที่บ้านHI`,
-      'รพ ค่ายเทพสตรีศรีสุนทร',
-      'เวลา 09.00น-15.00น ',
-      `✴️ อาหารผู้ป่วยจะได้รับถึงมื้อเย็นวันที่ ${lastServiceDay}`,
+      `❇️ แจ้งผู้ป่วย ${displayNameOrNothing} กักตัวระบบ HI รพค่ายเทพสตรีศรีสุนทร`,
+      `✅ ท่านได้เข้าระบบการดูแล ในวันที่ ${admittedDay}`,
+      `✅ ครบการดูแลติดตามอาการจากรพ. ในวันที่ ${recoveryDay}`,
+      `❇️❇️   ครบการกักตัว 10 วัน`,
+      `            ในวันที่ ${endHomeIsolationDay} และ`,
+      `สามารถใช้ชีวิตตามปกติภายใต้มาตรการ ระบบวิถีชีวิตใหม่  ใส่หน้ากากอนามัย ล้างมือ เว้นระยะห่าง`,
+      `- รับ ใบรับรองแพทย์ พร้อมผลตรวจ ตั้งแต่วันที่ ${certAvailableDay} ณ ห้องศูนย์HI ตึกผู้ป่วยใน รพ ค่ายเทพสตรีศรีสุนทร เวลา 09.00น-15.00น`,
+      `✴️ อาหารจะได้รับตั้งแต่มื้อเย็นวันที่ ${admittedDay} ถึง มื้อเย็น ${lastServiceDay}`,
+      `✅ ขอประวัติการรับวัคซีนโควิด`,
+      `เข็มที่ 1 เข็มที่ 2 เข็มที่ 3 ด้วยคะ`,
     ].join('\n'),
   }
 }
