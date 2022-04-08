@@ -54,7 +54,7 @@ const contactFetcher: ContactsFetcher = async () => {
     },
     where: {
       admittedAt: {
-        gte: activeTreatmentPeriod.getDateSinceFirstDay(1),
+        gte: activeTreatmentPeriod.getDateSinceFirstDay(2),
         lt: moment().startOf('day').toDate(),
       },
       NOT: { lineId: null },
