@@ -12,7 +12,6 @@ import {
   ContactsFetcher,
   genNowDisplayNotifyTime,
 } from '~/domain/notify-message.server'
-import moment from 'moment'
 
 export const action: ActionFunction = async ({ request }) => {
   await requireWebhookSignature(request)
