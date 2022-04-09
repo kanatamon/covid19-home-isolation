@@ -36,23 +36,18 @@ export const calculateTreatmentScale = (treatmentDayCount: number) => {
 }
 
 export namespace activeTreatmentPeriod {
-  function getToday() {
-    return moment().startOf('day')
-  }
-
-  function getDaySince(dayOffset: number): Moment {
+  export function getDateSinceFirstDay(dayOffset: number = 0): Date {
     if (dayOffset > FULL_TREATMENT_DAYS) {
       console.warn(`'dayOffset' should be in range [0, ${FULL_TREATMENT_DAYS}]`)
     }
-    return getToday().subtract(FULL_TREATMENT_DAYS - dayOffset, 'days')
+    return moment()
+      .startOf('day')
+      .subtract(FULL_TREATMENT_DAYS - dayOffset, 'days')
+      .toDate()
   }
 
-  export function getDateSinceFirstDay(dayOffset: number): Date {
-    return getDaySince(dayOffset).toDate()
-  }
-
-  export function getFirstDate(): Date {
-    return getDateSinceFirstDay(0)
+  export function getDateBeforeRecoveryDay(dayOffset: number = 0): Date {
+    return moment().endOf('day').subtract(dayOffset, 'days').toDate()
   }
 }
 

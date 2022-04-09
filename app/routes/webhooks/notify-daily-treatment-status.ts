@@ -67,7 +67,7 @@ async function contactFetcher(): Promise<NestedContact[]> {
     where: {
       admittedAt: {
         gte: activeTreatmentPeriod.getDateSinceFirstDay(1),
-        lt: moment().startOf('day').toDate(),
+        lt: activeTreatmentPeriod.getDateBeforeRecoveryDay(1),
       },
       NOT: { lineId: null },
     },

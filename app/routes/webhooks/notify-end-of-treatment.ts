@@ -59,7 +59,7 @@ const endOfTreatmentDateFetcher: ContactsFetcher = () => {
     },
     where: {
       admittedAt: {
-        gte: activeTreatmentPeriod.getFirstDate(),
+        gte: activeTreatmentPeriod.getDateSinceFirstDay(),
         lt: activeTreatmentPeriod.getDateSinceFirstDay(1),
       },
       NOT: { lineId: null },

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { badRequest, unauthorized, unprocessableEntity } from 'remix-utils'
+import { unauthorized, unprocessableEntity } from 'remix-utils'
 import {
   type ActionFunction,
   json,
@@ -23,6 +23,7 @@ import { useLIFFUtilsBeforeInit } from '~/hooks/useLIFF/useLIFFUtilsBeforeInit'
 
 import datePickerStyles from 'react-datepicker/dist/react-datepicker.css'
 import dialogStyles from '@reach/dialog/styles.css'
+import moment from 'moment'
 
 export const links: LinksFunction = () => [
   { href: datePickerStyles, rel: 'stylesheet' },
@@ -46,9 +47,16 @@ export const action: ActionFunction = async ({ request }) => {
 
   const { id, ...contact } = data
 
+  const officialAdmittedDate = moment(contact.admittedAt)
+    .add(1, 'days')
+    .startOf('day')
+    .hours(6)
+    .toDate()
+
   await db.homeIsolationForm.create({
     data: {
       ...contact,
+      admittedAt: officialAdmittedDate,
       treatmentDayCount: calculateTreatmentDayCount(contact.admittedAt),
       patients: {
         create: contact.patients.map(({ name }) => ({ name })),

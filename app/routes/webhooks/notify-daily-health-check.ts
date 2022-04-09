@@ -19,6 +19,8 @@ export const action: ActionFunction = async ({ request }) => {
 
   const toNotifyContacts: Contact[] = await contactFetcher()
 
+  return json(toNotifyContacts)
+
   const notifyMessageRequests = toNotifyContacts.map(async (contact) => {
     const displayNotifyTime = genNowDisplayNotifyTime()
     const message: TextMessage = {
@@ -54,8 +56,8 @@ const contactFetcher: ContactsFetcher = async () => {
     },
     where: {
       admittedAt: {
-        gte: activeTreatmentPeriod.getDateSinceFirstDay(2),
-        lt: moment().startOf('day').toDate(),
+        gte: activeTreatmentPeriod.getDateSinceFirstDay(1),
+        lt: activeTreatmentPeriod.getDateBeforeRecoveryDay(1),
       },
       NOT: { lineId: null },
     },
