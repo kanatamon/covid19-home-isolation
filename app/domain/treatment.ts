@@ -4,7 +4,7 @@ import moment, { Moment } from 'moment'
 const CERT_AVAILABLE_DAYS = 11
 const SERVICE_DAY = 6
 export const FULL_TREATMENT_DAYS = 7
-const FULL_HOME_ISOLATION_DAYS = 10
+export const FULL_HOME_ISOLATION_DAYS = 10
 export const HEALTH_SHADES = ['#f7797d', '#fbd786', '#c6ffdd']
 
 export const calculateTreatmentDayCount = (admittedAt: Date) => {
