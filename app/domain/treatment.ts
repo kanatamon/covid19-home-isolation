@@ -1,7 +1,7 @@
 import chroma from 'chroma-js'
 import moment, { Moment } from 'moment'
 
-const CERT_AVAILABLE_DAYS = 12
+const CERT_AVAILABLE_DAYS = 11
 const SERVICE_DAY = 6
 export const FULL_TREATMENT_DAYS = 7
 const FULL_HOME_ISOLATION_DAYS = 10
