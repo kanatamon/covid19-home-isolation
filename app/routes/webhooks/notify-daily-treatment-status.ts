@@ -8,7 +8,7 @@ import { db } from '~/utils/db.server'
 import { lineClient } from '~/utils/line-client.server'
 import { requireWebhookSignature } from '~/utils/webhook.server'
 import {
-  FULL_TREATMENT_DAYS,
+  FULL_HOME_ISOLATION_DAYS,
   Treatment,
   activeTreatmentPeriod,
   calculateTreatmentDayCount,
@@ -130,7 +130,7 @@ function genNotifyMessage({
     }
   })
 
-  const viz: FlexComponent[] = Array.from({ length: FULL_TREATMENT_DAYS }).map(
+  const viz: FlexComponent[] = Array.from({ length: FULL_HOME_ISOLATION_DAYS }).map(
     (_, idx) => {
       return {
         type: 'icon',
