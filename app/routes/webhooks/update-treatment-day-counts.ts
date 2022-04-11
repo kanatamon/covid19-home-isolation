@@ -19,7 +19,7 @@ export const action: ActionFunction = async ({ request }) => {
     },
     where: {
       admittedAt: {
-        gte: activeTreatmentPeriod.getFirstDate(),
+        gte: activeTreatmentPeriod.getDateSinceFirstDay(),
       },
     },
   })
