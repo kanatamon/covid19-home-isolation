@@ -76,7 +76,8 @@ export const loader: LoaderFunction = async ({ request }) => {
       patients: true,
     },
     orderBy: { admittedAt: 'desc' },
-    take: 20,
+    // TODO: Add pagination
+    // take: 20,
   })
   return json<LoaderData>({
     homeIsolationForms,
