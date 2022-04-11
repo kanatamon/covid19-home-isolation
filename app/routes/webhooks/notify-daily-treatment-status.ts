@@ -40,7 +40,7 @@ export const action: ActionFunction = async ({ request }) => {
     const message: FlexMessage = genNotifyMessage({
       treatmentDayCount: calculateTreatmentDayCount(contact.admittedAt),
       admittedDay: formatDisplayDate(contact.admittedAt),
-      recoveryDay: formatDisplayDate(treatment.getRecoveryDate()),
+      endHomeIsolationDay: formatDisplayDate(treatment.getEndHomeIsolationDate()),
       patients: contact.patients,
     })
 
@@ -92,12 +92,12 @@ const ICON_OUTLINE_URL =
 function genNotifyMessage({
   treatmentDayCount,
   admittedDay,
-  recoveryDay,
+  endHomeIsolationDay,
   patients,
 }: {
   treatmentDayCount: number
   admittedDay: string
-  recoveryDay: string
+  endHomeIsolationDay: string
   patients: Omit<Patient, 'formOwnerId'>[]
 }): FlexMessage {
   const displayNotifyTime = genNowDisplayNotifyTime(false)
@@ -256,7 +256,7 @@ function genNotifyMessage({
                   },
                   {
                     type: 'text',
-                    text: `วันที่ ${recoveryDay}`,
+                    text: `วันที่ ${endHomeIsolationDay}`,
                     size: 'sm',
                     color: '#666666',
                     flex: 5,
