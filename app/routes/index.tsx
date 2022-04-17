@@ -3,6 +3,7 @@ import { HomeIsolationForm, Patient } from '@prisma/client'
 import {
   Form,
   json,
+  Link,
   LoaderFunction,
   useLoaderData,
   useSubmit,
@@ -44,7 +45,6 @@ export default function Index() {
       <Form ref={formRef} action="/logout" method="post">
         <button
           type="submit"
-          style={{ maxWidth: 'max-content' }}
           onClick={logoutHandler}
           disabled={transition.state === 'submitting'}
         >
@@ -56,10 +56,26 @@ export default function Index() {
     ) : null
 
   return (
-    <main style={{ overflow: 'auto' }}>
-      <p>TODO: Implement user-profile</p>
+    <main
+      style={{
+        overflow: 'auto',
+        padding: '24px',
+        display: 'flex',
+        gap: 16,
+        flexDirection: 'column',
+      }}
+    >
+      {!data.homeIsolationForms?.length ? (
+        <button className="primary-btn">
+          <Link to="/contact/new">ลงทะเบียน</Link>
+        </button>
+      ) : null}
+      {data.homeIsolationForms?.[0]?.lat === null ? (
+        <button className="primary-btn">
+          <Link to="/contact/location">ลงทะเบียน</Link>
+        </button>
+      ) : null}
       {action}
-      <pre>{JSON.stringify(data, null, 2)}</pre>
     </main>
   )
 }
