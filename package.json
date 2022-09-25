@@ -8,7 +8,11 @@
     "build": "prisma generate & remix build",
     "dev": "cross-env NODE_ENV=development netlify dev",
     "postinstall": "remix setup node",
-    "start": "cross-env NODE_ENV=production netlify dev"
+    "start": "cross-env NODE_ENV=production netlify dev",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "setup:schema:test": "dotenv -e .env.test -- prisma db push",
+    "test": "dotenv -e .env.test -- jest -i"
   },
   "dependencies": {
     "@googlemaps/react-wrapper": "^1.1.25",
@@ -37,15 +41,20 @@
     "zod-form-data": "^1.2.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^6.1.2",
     "@remix-run/dev": "^1.2.2",
     "@types/chroma-js": "^2.1.3",
     "@types/google.maps": "^3.48.0",
+    "@types/jest": "^27.4.1",
     "@types/qrcode.react": "^1.0.2",
     "@types/react": "^17.0.24",
     "@types/react-datepicker": "^4.3.4",
     "@types/react-dom": "^17.0.9",
     "cross-env": "^7.0.3",
+    "dotenv-cli": "^5.1.0",
+    "jest": "^27.5.1",
     "prisma": "^3.10.0",
+    "ts-jest": "^27.1.4",
     "typescript": "^4.5.5"
   },
   "engines": {
