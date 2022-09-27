@@ -1,14 +1,7 @@
 import { useRef } from 'react'
 import { HomeIsolationForm, Patient } from '@prisma/client'
-import {
-  Form,
-  json,
-  Link,
-  LoaderFunction,
-  useLoaderData,
-  useSubmit,
-  useTransition,
-} from 'remix'
+import { json, LoaderFunction } from "@remix-run/node";
+import { Form, Link, useLoaderData, useSubmit, useTransition } from "@remix-run/react";
 
 import { db } from '~/utils/db.server'
 import { requireUserLineId } from '~/utils/session.server'

@@ -1,12 +1,7 @@
 import { useState } from 'react'
 import { unauthorized, unprocessableEntity } from 'remix-utils'
-import {
-  type ActionFunction,
-  json,
-  LoaderFunction,
-  useCatch,
-  LinksFunction,
-} from 'remix'
+import { ActionFunction, json, LinksFunction, LoaderFunction } from "@remix-run/node";
+import { useCatch } from "@remix-run/react";
 import { validationError } from 'remix-validated-form'
 
 import { requireUserLineId } from '~/utils/session.server'

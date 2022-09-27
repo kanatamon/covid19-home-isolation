@@ -1,5 +1,5 @@
 import { FlexMessage } from '@line/bot-sdk'
-import { ActionFunction, json } from 'remix'
+import { ActionFunction, json } from "@remix-run/node";
 import { serverError } from 'remix-utils'
 import { contactSchema, ContactsQueryFn } from '~/domain/notify-message.server'
 

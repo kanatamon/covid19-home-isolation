@@ -1,4 +1,4 @@
-import { Link } from 'remix'
+import { Link } from "@remix-run/react";
 import QRCode from 'qrcode.react'
 import { useLIFFUtilsBeforeInit } from '~/hooks/useLIFF/useLIFFUtilsBeforeInit'
 

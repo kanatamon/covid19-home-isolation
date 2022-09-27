@@ -2,13 +2,8 @@ import React from 'react'
 import { ClientOnly } from 'remix-utils'
 import { Status, Wrapper } from '@googlemaps/react-wrapper'
 import { HomeIsolationForm, Patient, Prisma } from '@prisma/client'
-import {
-  json,
-  LinksFunction,
-  LoaderFunction,
-  useFetcher,
-  useLoaderData,
-} from 'remix'
+import { json, LinksFunction, LoaderFunction } from "@remix-run/node";
+import { useFetcher, useLoaderData } from "@remix-run/react";
 import { zfd } from 'zod-form-data'
 import { z } from 'zod'
 

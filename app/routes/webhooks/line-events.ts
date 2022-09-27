@@ -1,4 +1,4 @@
-import { ActionFunction, json } from 'remix'
+import { ActionFunction, json } from "@remix-run/node";
 import { ReplyableEvent, ImageEventMessage, TextMessage } from '@line/bot-sdk'
 
 import { errorHandler, lineClient } from '~/utils/line-client.server'

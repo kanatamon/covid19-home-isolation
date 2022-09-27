@@ -1,15 +1,6 @@
 import React from 'react'
-import {
-  ActionFunction,
-  Form,
-  json,
-  LoaderFunction,
-  redirect,
-  useLoaderData,
-  useSubmit,
-  useTransition,
-  HeadersFunction,
-} from 'remix'
+import { ActionFunction, HeadersFunction, json, LoaderFunction, redirect } from "@remix-run/node";
+import { Form, useLoaderData, useSubmit, useTransition } from "@remix-run/react";
 import { badRequest } from 'remix-utils'
 import { useGetLINEProfile } from '~/hooks/useLIFF/useGetLineProfile'
 import { createUserSession, getUserLineId } from '~/utils/session.server'

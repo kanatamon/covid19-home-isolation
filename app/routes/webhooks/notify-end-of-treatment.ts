@@ -1,4 +1,4 @@
-import { ActionFunction, json } from 'remix'
+import { ActionFunction, json } from "@remix-run/node";
 import { badRequest, serverError } from 'remix-utils'
 import { TextMessage } from '@line/bot-sdk'
 

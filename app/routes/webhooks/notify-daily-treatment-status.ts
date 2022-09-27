@@ -1,4 +1,4 @@
-import { ActionFunction, json } from 'remix'
+import { ActionFunction, json } from "@remix-run/node";
 import type { FlexBox, FlexComponent, FlexMessage } from '@line/bot-sdk'
 import type { Patient } from '@prisma/client'
 

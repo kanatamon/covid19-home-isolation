@@ -7,7 +7,7 @@ import {
   RequestError,
   ReadError,
 } from '@line/bot-sdk'
-import { json } from 'remix'
+import { json } from "@remix-run/node";
 import { badRequest } from 'remix-utils'
 
 const CHANNEL_ACCESS_TOKEN = process.env.CHANEL_ACCESS_TOKEN

@@ -1,19 +1,8 @@
 import { Status, Wrapper } from '@googlemaps/react-wrapper'
 import { Prisma } from '@prisma/client'
 import React from 'react'
-import {
-  ActionFunction,
-  Form,
-  HeadersFunction,
-  json,
-  Link,
-  LinksFunction,
-  LoaderFunction,
-  useActionData,
-  useCatch,
-  useLoaderData,
-  useTransition,
-} from 'remix'
+import { ActionFunction, HeadersFunction, json, LinksFunction, LoaderFunction } from "@remix-run/node";
+import { Form, Link, useActionData, useCatch, useLoaderData, useTransition } from "@remix-run/react";
 import { ClientOnly, unauthorized, unprocessableEntity } from 'remix-utils'
 import { z } from 'zod'
 import { withZod } from '@remix-validated-form/with-zod'

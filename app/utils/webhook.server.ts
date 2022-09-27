@@ -1,4 +1,4 @@
-import { json } from 'remix'
+import { json } from "@remix-run/node";
 import crypto from 'crypto'
 import { getUserRole } from './session.server'
 

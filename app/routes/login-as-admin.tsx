@@ -1,4 +1,5 @@
-import { ActionFunction, Form, json } from 'remix'
+import { ActionFunction, json } from "@remix-run/node";
+import { Form } from "@remix-run/react";
 import {
   isValidAdminCredential,
   createAdminSession,

@@ -1,5 +1,6 @@
 import { HomeIsolationForm, Patient } from '@prisma/client'
-import { type ActionFunction, LoaderFunction, json, useLoaderData } from 'remix'
+import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
 import { badRequest, notFound } from 'remix-utils'
 import { validationError } from 'remix-validated-form'
 
