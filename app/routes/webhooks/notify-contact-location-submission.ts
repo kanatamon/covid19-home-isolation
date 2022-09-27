@@ -1,5 +1,7 @@
 import { FlexMessage } from '@line/bot-sdk'
 import { ActionFunction, json } from 'remix'
+import { serverError } from 'remix-utils'
+import { contactSchema, ContactsQueryFn } from '~/domain/notify-message.server'
 
 import { db } from '~/utils/db.server'
 import {
@@ -12,9 +14,21 @@ import { requireWebhookSignature } from '~/utils/webhook.server'
 export const action: ActionFunction = async ({ request }) => {
   await requireWebhookSignature(request)
 
-  const toNotifyContacts = await db.homeIsolationForm.findMany({
+  const toNotifyContacts = await queryContactsWhoNeverSubmittedLocation()
+  const to = toNotifyContacts.map((contact) => contact.lineId as string)
+  if (to.length > 0) {
+    await lineClient.multicast(to, [notifyMessage]).catch(errorHandler)
+  }
+
+  return json({})
+}
+
+export const queryContactsWhoNeverSubmittedLocation: ContactsQueryFn = async () => {
+  const contacts = await db.homeIsolationForm.findMany({
     select: {
       lineId: true,
+      lineDisplayName: true,
+      admittedAt: true,
     },
     where: {
       lat: null,
@@ -23,12 +37,15 @@ export const action: ActionFunction = async ({ request }) => {
     },
   })
 
-  const to = toNotifyContacts.map((contact) => contact.lineId as string)
-  if (to.length > 0) {
-    await lineClient.multicast(to, [notifyMessage]).catch(errorHandler)
+  const parseResult = contactSchema.array().safeParse(contacts)
+  if (!parseResult.success) {
+    throw serverError({
+      message: 'Oops! contacts fetching is received unexpected',
+      error: parseResult.error,
+    })
   }
 
-  return json({})
+  return parseResult.data
 }
 
 const notifyMessage: FlexMessage = {

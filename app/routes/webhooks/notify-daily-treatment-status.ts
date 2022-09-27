@@ -1,38 +1,22 @@
 import { ActionFunction, json } from 'remix'
-import { serverError } from 'remix-utils'
-import { FlexBox, FlexComponent, FlexMessage } from '@line/bot-sdk'
-import { Patient } from '@prisma/client'
-import { z } from 'zod'
+import type { FlexBox, FlexComponent, FlexMessage } from '@line/bot-sdk'
+import type { Patient } from '@prisma/client'
 
-import { db } from '~/utils/db.server'
 import { lineClient } from '~/utils/line-client.server'
 import { requireWebhookSignature } from '~/utils/webhook.server'
+import { FULL_HOME_ISOLATION_DAYS, Treatment, calculateTreatmentDayCount } from '~/domain/treatment'
 import {
-  FULL_HOME_ISOLATION_DAYS,
-  Treatment,
-  activeTreatmentPeriod,
-  calculateTreatmentDayCount,
-} from '~/domain/treatment'
-import {
-  contactSchema,
+  type Contact,
   genNowDisplayNotifyTime,
+  queryContactsWithinActiveTreatmentPeriod,
 } from '~/domain/notify-message.server'
-import moment from 'moment'
-
-const nestedContactSchema = contactSchema.extend({
-  patients: z
-    .object({
-      id: z.string().uuid(),
-      name: z.string(),
-    })
-    .array(),
-})
-type NestedContact = z.infer<typeof nestedContactSchema>
 
 export const action: ActionFunction = async ({ request }) => {
   await requireWebhookSignature(request)
 
-  const toNotifyContacts: NestedContact[] = await contactFetcher()
+  const toNotifyContacts: Contact[] = await queryContactsWithinActiveTreatmentPeriod({
+    includedPatients: true,
+  })
 
   const notifyMessageRequests = toNotifyContacts.map(async (contact) => {
     const treatment = new Treatment(contact.admittedAt)
@@ -41,7 +25,7 @@ export const action: ActionFunction = async ({ request }) => {
       treatmentDayCount: calculateTreatmentDayCount(contact.admittedAt),
       admittedDay: formatDisplayDate(contact.admittedAt),
       endHomeIsolationDay: formatDisplayDate(treatment.getEndHomeIsolationDate()),
-      patients: contact.patients,
+      patients: contact?.patients ?? [],
     })
 
     return lineClient.pushMessage(contact.lineId, message)
@@ -54,34 +38,6 @@ export const action: ActionFunction = async ({ request }) => {
 
 function formatDisplayDate(date: Date): string {
   return new Intl.DateTimeFormat('th', { dateStyle: 'medium' }).format(date)
-}
-
-async function contactFetcher(): Promise<NestedContact[]> {
-  const contacts = await db.homeIsolationForm.findMany({
-    select: {
-      lineId: true,
-      lineDisplayName: true,
-      admittedAt: true,
-      patients: true,
-    },
-    where: {
-      admittedAt: {
-        gte: activeTreatmentPeriod.getDateSinceFirstDay(1),
-        lt: activeTreatmentPeriod.getDateBeforeRecoveryDay(1),
-      },
-      NOT: { lineId: null },
-    },
-  })
-
-  const parseResult = nestedContactSchema.array().safeParse(contacts)
-  if (!parseResult.success) {
-    throw serverError({
-      message: 'Oops! contacts fetching is received unexpected',
-      error: parseResult.error,
-    })
-  }
-
-  return parseResult.data
 }
 
 const ICON_FILLED_URL =
@@ -130,15 +86,13 @@ function genNotifyMessage({
     }
   })
 
-  const viz: FlexComponent[] = Array.from({ length: FULL_HOME_ISOLATION_DAYS }).map(
-    (_, idx) => {
-      return {
-        type: 'icon',
-        size: 'md',
-        url: treatmentDayCount > idx ? ICON_FILLED_URL : ICON_OUTLINE_URL,
-      }
+  const viz: FlexComponent[] = Array.from({ length: FULL_HOME_ISOLATION_DAYS }).map((_, idx) => {
+    return {
+      type: 'icon',
+      size: 'md',
+      url: treatmentDayCount > idx ? ICON_FILLED_URL : ICON_OUTLINE_URL,
     }
-  )
+  })
 
   return {
     type: 'flex',

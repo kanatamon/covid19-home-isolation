@@ -1,24 +1,19 @@
 import { ActionFunction, json } from 'remix'
-import { badRequest } from 'remix-utils'
+import { badRequest, serverError } from 'remix-utils'
 import { TextMessage } from '@line/bot-sdk'
 
 import { db } from '~/utils/db.server'
 import { activeTreatmentPeriod, Treatment } from '~/domain/treatment'
 import { lineClient } from '~/utils/line-client.server'
 import { requireWebhookSignature } from '~/utils/webhook.server'
+import { ContactsQueryFn, Contact, contactSchema } from '~/domain/notify-message.server'
 
-type Contact = {
-  admittedAt: Date
-  lineId: string | null
-  lineDisplayName: string | null
-}
-type ContactsFetcher = () => Promise<Contact[]>
 type NotifyType = 'END_TREATMENT' | 'PREPARE_TO_END_TREATMENT'
 
 export const action: ActionFunction = async ({ request }) => {
   await requireWebhookSignature(request)
 
-  const contactFetcher: ContactsFetcher = selectContactsFetcher(request)
+  const contactFetcher = selectContactsQueryFn(request)
   const toNotifyContacts = await contactFetcher()
 
   // TODO: Should add retry request?
@@ -28,7 +23,7 @@ export const action: ActionFunction = async ({ request }) => {
   return json({})
 }
 
-function selectContactsFetcher(request: Request): ContactsFetcher {
+function selectContactsQueryFn(request: Request): ContactsQueryFn {
   const searchParams = new URL(request.url).searchParams
   const notifyType = searchParams.get('notifyType')
   if (typeof notifyType !== 'string') {
@@ -37,10 +32,10 @@ function selectContactsFetcher(request: Request): ContactsFetcher {
 
   switch (notifyType as NotifyType) {
     case 'END_TREATMENT': {
-      return endOfTreatmentDateFetcher
+      return queryContactsWhoGetRecoveryByToday
     }
     case 'PREPARE_TO_END_TREATMENT': {
-      return dayBeforeEndOfTreatmentDateFetcher
+      return queryContactsWhoGonnaGetRecoveryByTomorrow
     }
     default: {
       throw badRequest({
@@ -50,8 +45,8 @@ function selectContactsFetcher(request: Request): ContactsFetcher {
   }
 }
 
-const endOfTreatmentDateFetcher: ContactsFetcher = () => {
-  return db.homeIsolationForm.findMany({
+export const queryContactsWhoGetRecoveryByToday: ContactsQueryFn = async () => {
+  const contacts = await db.homeIsolationForm.findMany({
     select: {
       lineId: true,
       lineDisplayName: true,
@@ -65,10 +60,20 @@ const endOfTreatmentDateFetcher: ContactsFetcher = () => {
       NOT: { lineId: null },
     },
   })
+
+  const parseResult = contactSchema.array().safeParse(contacts)
+  if (!parseResult.success) {
+    throw serverError({
+      message: 'Oops! contacts fetching is received unexpected',
+      error: parseResult.error,
+    })
+  }
+
+  return parseResult.data
 }
 
-const dayBeforeEndOfTreatmentDateFetcher: ContactsFetcher = () => {
-  return db.homeIsolationForm.findMany({
+export const queryContactsWhoGonnaGetRecoveryByTomorrow: ContactsQueryFn = async () => {
+  const contacts = await db.homeIsolationForm.findMany({
     select: {
       lineId: true,
       lineDisplayName: true,
@@ -82,6 +87,16 @@ const dayBeforeEndOfTreatmentDateFetcher: ContactsFetcher = () => {
       NOT: { lineId: null },
     },
   })
+
+  const parseResult = contactSchema.array().safeParse(contacts)
+  if (!parseResult.success) {
+    throw serverError({
+      message: 'Oops! contacts fetching is received unexpected',
+      error: parseResult.error,
+    })
+  }
+
+  return parseResult.data
 }
 
 async function notifyContact(contact: Contact) {
