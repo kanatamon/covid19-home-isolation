@@ -2,13 +2,7 @@ import React from 'react'
 import { useLIFFUtilsBeforeInit } from './useLIFFUtilsBeforeInit'
 import { liff } from './liff.client'
 
-type State =
-  | 'idle'
-  | 'initializing'
-  | 'initialized'
-  | 'failed'
-  | 'pending'
-  | 'fulfilled'
+type State = 'idle' | 'initializing' | 'initialized' | 'failed' | 'pending' | 'fulfilled'
 
 type Profile = {
   userId: string
@@ -89,7 +83,7 @@ export function useGetLINEProfile() {
           setState('failed')
         })
     },
-    [state]
+    [state],
   )
   React.useEffect(
     function getIdTokenAfterInitialized() {
@@ -97,7 +91,7 @@ export function useGetLINEProfile() {
         setIdToken(liff.getIDToken() ?? undefined)
       }
     },
-    [state]
+    [state],
   )
 
   React.useEffect(
@@ -106,7 +100,7 @@ export function useGetLINEProfile() {
         setIsLoggedIn(liff.isLoggedIn())
       }
     },
-    [state]
+    [state],
   )
 
   const login = () => {

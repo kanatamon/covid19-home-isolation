@@ -1,10 +1,11 @@
-import { ActionFunction, json } from "@remix-run/node";
-import { TextMessage } from '@line/bot-sdk'
+import type { ActionFunction } from '@remix-run/node'
+import { json } from '@remix-run/node'
+import type { TextMessage } from '@line/bot-sdk'
 
 import { lineClient } from '~/utils/line-client.server'
 import { requireWebhookSignature } from '~/utils/webhook.server'
+import type { Contact } from '~/domain/notify-message.server'
 import {
-  Contact,
   genNowDisplayNotifyTime,
   queryContactsWithinActiveTreatmentPeriod,
 } from '~/domain/notify-message.server'

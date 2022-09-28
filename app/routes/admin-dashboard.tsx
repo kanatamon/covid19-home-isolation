@@ -1,9 +1,12 @@
 import React from 'react'
 import { ClientOnly } from 'remix-utils'
-import { Status, Wrapper } from '@googlemaps/react-wrapper'
-import { HomeIsolationForm, Patient, Prisma } from '@prisma/client'
-import { json, LinksFunction, LoaderFunction } from "@remix-run/node";
-import { useFetcher, useLoaderData } from "@remix-run/react";
+import type { Status } from '@googlemaps/react-wrapper'
+import { Wrapper } from '@googlemaps/react-wrapper'
+import type { HomeIsolationForm, Patient } from '@prisma/client'
+import { Prisma } from '@prisma/client'
+import type { LinksFunction, LoaderFunction } from '@remix-run/node'
+import { json } from '@remix-run/node'
+import { useFetcher, useLoaderData } from '@remix-run/react'
 import { zfd } from 'zod-form-data'
 import { z } from 'zod'
 
@@ -21,9 +24,7 @@ import {
 
 import datePickerStyles from 'react-datepicker/dist/react-datepicker.css'
 
-export const links: LinksFunction = () => [
-  { href: datePickerStyles, rel: 'stylesheet' },
-]
+export const links: LinksFunction = () => [{ href: datePickerStyles, rel: 'stylesheet' }]
 
 type HomeIsolationFormData = HomeIsolationForm & {
   patients: Omit<Patient, 'formOwnerId'>[]
@@ -57,9 +58,7 @@ const schema = homeIsolationFormValuesSchema.extend({
   lng: decimal.nullable(),
   treatmentDayCount: zfd.numeric(),
 })
-const parseManyToHomeIsolationFormData = (
-  data: unknown
-): HomeIsolationFormData[] => {
+const parseManyToHomeIsolationFormData = (data: unknown): HomeIsolationFormData[] => {
   return schema.array().parse(data)
 }
 
@@ -91,9 +90,7 @@ type Actions = 'add' | 'delete' | 'idle'
 
 export default function AdminDashboardRoute() {
   const data = useLoaderData<LoaderData>()
-  const homeIsolationForms = parseManyToHomeIsolationFormData(
-    data.homeIsolationForms
-  )
+  const homeIsolationForms = parseManyToHomeIsolationFormData(data.homeIsolationForms)
 
   const [spottedFormIds, setSpottedFormIds] = React.useState<{
     items: Set<string>
@@ -183,10 +180,7 @@ export default function AdminDashboardRoute() {
                   padding: '24px 16px',
                   backgroundColor: 'white',
                   outlineOffset: 3,
-                  outline:
-                    spottedFormIds.lastActedItemId === form.id
-                      ? '2px solid deeppink'
-                      : 0,
+                  outline: spottedFormIds.lastActedItemId === form.id ? '2px solid deeppink' : 0,
                 }}
               >
                 <HomeIsolationFormSmartView
@@ -222,7 +216,7 @@ export default function AdminDashboardRoute() {
                       isSpotted={spottedFormIds.items.has(form.id)}
                       onClick={onToggleSpottedFormIdHandler}
                     />
-                  ) : null
+                  ) : null,
                 )}
               </Map>
             </Wrapper>
@@ -275,9 +269,7 @@ const Marker: React.FC<
 
     return () => {
       if (marker) {
-        ;['click'].forEach((eventName) =>
-          google.maps.event.clearListeners(marker, eventName)
-        )
+        ;['click'].forEach((eventName) => google.maps.event.clearListeners(marker, eventName))
       }
     }
   }, [marker, data, onClick])
@@ -330,18 +322,12 @@ const Marker: React.FC<
     const admittedAtDisplay = displayDateFormatter.format(admittedAt)
     const admittedAtMessageDisplay = `เริ่มรักษาเมื่อ : ${admittedAtDisplay}`
 
-    const recoveryDateDisplay = displayDateFormatter.format(
-      calculateRecoveryDay(admittedAt)
-    )
+    const recoveryDateDisplay = displayDateFormatter.format(calculateRecoveryDay(admittedAt))
     const recoveryMessageDisplay = hasRecoverySinceNow(admittedAt)
       ? `<span style="color: forestgreen;">สิ้นสุดการรักษาเมื่อ : ${recoveryDateDisplay}</span>`
       : `<span style="color: red;">จะสิ้นสุดการรักษาเมื่อ : ${recoveryDateDisplay}</span>`
 
-    const content = [
-      patientsDisplay,
-      admittedAtMessageDisplay,
-      recoveryMessageDisplay,
-    ]
+    const content = [patientsDisplay, admittedAtMessageDisplay, recoveryMessageDisplay]
       .filter(Boolean)
       .join('<br />')
 
@@ -371,55 +357,35 @@ const NotifyPanel: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', gap: 8 }}>
-      <askLocationFetcher.Form
-        method="post"
-        action="/webhooks/notify-contact-location-submission"
-      >
-        <ActionBtn disabled={askLocationFetcher.state === 'submitting'}>
-          Ask Location
-        </ActionBtn>
+      <askLocationFetcher.Form method="post" action="/webhooks/notify-contact-location-submission">
+        <ActionBtn disabled={askLocationFetcher.state === 'submitting'}>Ask Location</ActionBtn>
       </askLocationFetcher.Form>
-      <treatmentStatusFetcher.Form
-        method="post"
-        action="/webhooks/notify-daily-treatment-status"
-      >
+      <treatmentStatusFetcher.Form method="post" action="/webhooks/notify-daily-treatment-status">
         <ActionBtn disabled={treatmentStatusFetcher.state === 'submitting'}>
           Treatment Status
         </ActionBtn>
       </treatmentStatusFetcher.Form>
-      <healthCheckFetcher.Form
-        method="post"
-        action="/webhooks/notify-daily-health-check"
-      >
-        <ActionBtn disabled={healthCheckFetcher.state === 'submitting'}>
-          Health Check
-        </ActionBtn>
+      <healthCheckFetcher.Form method="post" action="/webhooks/notify-daily-health-check">
+        <ActionBtn disabled={healthCheckFetcher.state === 'submitting'}>Health Check</ActionBtn>
       </healthCheckFetcher.Form>
       <preRecoveryFetcher.Form
         method="post"
         action="/webhooks/notify-end-of-treatment?notifyType=PREPARE_TO_END_TREATMENT"
       >
-        <ActionBtn disabled={preRecoveryFetcher.state === 'submitting'}>
-          Pre-Recovery
-        </ActionBtn>
+        <ActionBtn disabled={preRecoveryFetcher.state === 'submitting'}>Pre-Recovery</ActionBtn>
       </preRecoveryFetcher.Form>
       <recoveryFetcher.Form
         method="post"
         action="/webhooks/notify-end-of-treatment?notifyType=END_TREATMENT"
       >
-        <ActionBtn disabled={recoveryFetcher.state === 'submitting'}>
-          Recovery
-        </ActionBtn>
+        <ActionBtn disabled={recoveryFetcher.state === 'submitting'}>Recovery</ActionBtn>
       </recoveryFetcher.Form>
     </div>
   )
 }
 
 const ActionBtn: React.FC<
-  React.DetailedHTMLProps<
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
-    HTMLButtonElement
-  >
+  React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>
 > = ({ children, style, ...other }) => {
   return (
     <button

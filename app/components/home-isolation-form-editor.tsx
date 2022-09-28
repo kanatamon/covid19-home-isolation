@@ -1,5 +1,5 @@
 import React from 'react'
-import { useFetcher } from "@remix-run/react";
+import { useFetcher } from '@remix-run/react'
 import {
   Controller,
   useFieldArray,
@@ -8,7 +8,8 @@ import {
   type UseFormReturn,
   type FieldError,
 } from 'react-hook-form'
-import DatePicker, { ReactDatePickerCustomHeaderProps } from 'react-datepicker'
+import type { ReactDatePickerCustomHeaderProps } from 'react-datepicker'
+import DatePicker from 'react-datepicker'
 import th from 'date-fns/locale/th'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -35,23 +36,17 @@ export const homeIsolationFormValuesSchema = z.object({
       z.object({
         id: z.string(),
         name: z.string().nonempty('Name is required!'),
-      })
+      }),
     )
     .min(1),
   // TODO: should limit max patients?
 })
 
-export type HomeIsolationFormValues = z.infer<
-  typeof homeIsolationFormValuesSchema
->
+export type HomeIsolationFormValues = z.infer<typeof homeIsolationFormValuesSchema>
 
 export const homeIsolationFormValidator = withZod(homeIsolationFormValuesSchema)
-export const homeIsolationFormResolver = zodResolver(
-  homeIsolationFormValuesSchema
-)
-export const parseToHomeIsolationFormValues = (
-  data: unknown
-): HomeIsolationFormValues => {
+export const homeIsolationFormResolver = zodResolver(homeIsolationFormValuesSchema)
+export const parseToHomeIsolationFormValues = (data: unknown): HomeIsolationFormValues => {
   return homeIsolationFormValuesSchema.parse(data)
 }
 
@@ -108,7 +103,8 @@ export const NewHomeIsolationFormEditor: React.FC<{
     function emitOnSuccess() {
       hasSuccessfullySubmitted && onSuccess?.()
     },
-    [hasSuccessfullySubmitted]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [hasSuccessfullySubmitted],
   )
 
   const canEdit = fetcher.state !== 'submitting' && !hasSuccessfullySubmitted
@@ -138,9 +134,7 @@ export const NewHomeIsolationFormEditor: React.FC<{
               className="primary-btn"
               disabled={fetcher.state === 'submitting' || !isValid}
             >
-              {fetcher.state === 'submitting'
-                ? 'กำลังส่งแบบฟอร์ม...'
-                : 'ส่งแบบฟอร์ม'}
+              {fetcher.state === 'submitting' ? 'กำลังส่งแบบฟอร์ม...' : 'ส่งแบบฟอร์ม'}
             </button>
           </>
         )}
@@ -161,8 +155,7 @@ export const HomeIsolationFormEditor: React.FC<{
   }
 
   const isNeedToUpdate = isDirty
-  const canEdit =
-    updateFetcher.state !== 'submitting' && deleteFetcher.state !== 'submitting'
+  const canEdit = updateFetcher.state !== 'submitting' && deleteFetcher.state !== 'submitting'
   const actionUrl = `/home-isolation-form/${methods.getValues('id')}`
 
   return (
@@ -194,9 +187,7 @@ export const HomeIsolationFormEditor: React.FC<{
               className="primary-btn"
               disabled={!canEdit || !isNeedToUpdate || !isValid}
             >
-              {updateFetcher.state === 'submitting'
-                ? 'กำลังบันทึก...'
-                : 'บันทึก'}
+              {updateFetcher.state === 'submitting' ? 'กำลังบันทึก...' : 'บันทึก'}
             </button>
           ) : (
             <button disabled>บันทึกแล้ว</button>
@@ -224,9 +215,7 @@ export const HomeIsolationFormEditor: React.FC<{
           }}
           disabled={!canEdit}
         >
-          {deleteFetcher.state === 'submitting'
-            ? 'กำลังลบข้อมูล...'
-            : 'ลบข้อมูล'}
+          {deleteFetcher.state === 'submitting' ? 'กำลังลบข้อมูล...' : 'ลบข้อมูล'}
         </button>
       </deleteFetcher.Form>
     </>
@@ -272,7 +261,7 @@ const HomeIsolationFormCommon: React.FC<{
           control={methods.control}
           name="linePictureUrl"
           render={({ field }) =>
-            !!field.value ? (
+            field.value ? (
               // @ts-ignore
               <input {...field} type="hidden" />
             ) : (
@@ -290,11 +279,7 @@ const HomeIsolationFormCommon: React.FC<{
           render={({ field }) => {
             return (
               <>
-                <input
-                  type="hidden"
-                  name={field.name}
-                  value={field.value.toISOString()}
-                />
+                <input type="hidden" name={field.name} value={field.value.toISOString()} />
                 <DatePicker
                   {...field}
                   required
@@ -433,8 +418,7 @@ const HomeIsolationFormCommon: React.FC<{
                         <input {...field} readOnly={!canEdit} />
                         <button
                           style={{
-                            width:
-                              'calc(2px + var(--fontSize) + 2 * var(--verticalPadding))',
+                            width: 'calc(2px + var(--fontSize) + 2 * var(--verticalPadding))',
                           }}
                           onClick={() => removePatientHandler(idx)}
                           disabled={!canEdit || isMinPatientCount}
@@ -515,10 +499,7 @@ const DatePickerHeader: React.FC<ReactDatePickerCustomHeaderProps> = ({
   )
 }
 
-const LightMessage: React.FC<{ style?: React.CSSProperties }> = ({
-  children,
-  style = {},
-}) => {
+const LightMessage: React.FC<{ style?: React.CSSProperties }> = ({ children, style = {} }) => {
   return (
     <p
       style={{
@@ -533,9 +514,7 @@ const LightMessage: React.FC<{ style?: React.CSSProperties }> = ({
   )
 }
 
-const FieldErrorMessage: React.FC<{ error: FieldError | undefined }> = ({
-  error,
-}) => {
+const FieldErrorMessage: React.FC<{ error: FieldError | undefined }> = ({ error }) => {
   return typeof error?.message === 'string' ? (
     <p style={{ color: '#bf1650' }}>{`⚠ ${error.message}`}</p>
   ) : null
@@ -582,3 +561,4 @@ const DisplayDateInBuddhistEra = React.forwardRef<
     </button>
   )
 })
+DisplayDateInBuddhistEra.displayName = 'DisplayDateInBuddhistEra'

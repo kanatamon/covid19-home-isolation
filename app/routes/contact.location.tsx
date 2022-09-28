@@ -1,8 +1,15 @@
-import { Status, Wrapper } from '@googlemaps/react-wrapper'
+import type { Status } from '@googlemaps/react-wrapper'
+import { Wrapper } from '@googlemaps/react-wrapper'
 import { Prisma } from '@prisma/client'
 import React from 'react'
-import { ActionFunction, HeadersFunction, json, LinksFunction, LoaderFunction } from "@remix-run/node";
-import { Form, Link, useActionData, useCatch, useLoaderData, useTransition } from "@remix-run/react";
+import type {
+  ActionFunction,
+  HeadersFunction,
+  LinksFunction,
+  LoaderFunction,
+} from '@remix-run/node'
+import { json } from '@remix-run/node'
+import { Form, Link, useActionData, useCatch, useLoaderData, useTransition } from '@remix-run/react'
 import { ClientOnly, unauthorized, unprocessableEntity } from 'remix-utils'
 import { z } from 'zod'
 import { withZod } from '@remix-validated-form/with-zod'
@@ -32,9 +39,7 @@ export const headers: HeadersFunction = ({ loaderHeaders, parentHeaders }) => {
   }
 }
 
-export const links: LinksFunction = () => [
-  { href: dialogStyles, rel: 'stylesheet' },
-]
+export const links: LinksFunction = () => [{ href: dialogStyles, rel: 'stylesheet' }]
 
 const numericPosition = z.preprocess((val) => {
   if (typeof val === 'string' || typeof val === 'number') {
@@ -161,7 +166,15 @@ export default function ContactLocationRoute() {
     return initializeMapControl(data)
   })
 
-  const getCurrentPosition = useGetCurrentPosition()
+  const getCurrentPosition = useGetCurrentPosition((pos) => {
+    setMapControl({
+      center: {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+      },
+      zoom: 17,
+    })
+  })
 
   React.useEffect(
     function openSuccessDialogOnSubmitSuccessfully() {
@@ -169,16 +182,16 @@ export default function ContactLocationRoute() {
         setIsOpenSuccessDialog(true)
       }
     },
-    [actionData]
+    [actionData],
   )
 
-  React.useEffect(
-    function emitOnGetCurrentPositionSuccess() {
-      const { position } = getCurrentPosition
-      position && setMapControl({ center: position, zoom: 17 })
-    },
-    [getCurrentPosition.position]
-  )
+  // React.useEffect(
+  //   function emitOnGetCurrentPositionSuccess() {
+  //     const { position } = getCurrentPosition
+  //     position && setMapControl({ center: position, zoom: 17 })
+  //   },
+  //   [getCurrentPosition.position],
+  // )
 
   const mapIdleHandler = (map: google.maps.Map) => {
     const zoom = map.getZoom()
@@ -251,32 +264,21 @@ export default function ContactLocationRoute() {
               onClick={getCurrentPosition.fetch}
               disabled={getCurrentPosition.state === 'pending' || !canEdit}
             >
-              {getCurrentPosition.state === 'pending'
-                ? 'กำลังระบุตำแหน่ง...'
-                : 'ตำแหน่งปัจจุบัน'}
+              {getCurrentPosition.state === 'pending' ? 'กำลังระบุตำแหน่ง...' : 'ตำแหน่งปัจจุบัน'}
             </button>
             <div style={{ height: 24 }} />
             <Form method="post">
-              <input
-                type="hidden"
-                name="id"
-                value={data.locationFormValues.id}
-              />
+              <input type="hidden" name="id" value={data.locationFormValues.id} />
               <input type="hidden" name="lat" value={mapControl.center.lat} />
               <input type="hidden" name="lng" value={mapControl.center.lng} />
               <button type="submit" className="primary-btn" disabled={!canEdit}>
-                {transition.state === 'submitting'
-                  ? 'กำลังยืนยันพิกัด...'
-                  : 'ยืนยันพิกัด'}
+                {transition.state === 'submitting' ? 'กำลังยืนยันพิกัด...' : 'ยืนยันพิกัด'}
               </button>
             </Form>
           </div>
         </div>
       </div>
-      <SuccessDialog
-        isOpen={isOpenSuccessDialog}
-        onDismiss={closeSuccessDialogHandler}
-      />
+      <SuccessDialog isOpen={isOpenSuccessDialog} onDismiss={closeSuccessDialogHandler} />
     </>
   )
 }
@@ -293,16 +295,14 @@ export function CatchBoundary() {
     return (
       <AlertDialog isOpen={true} ariaLabelledBy={id}>
         <p id={id}>
-          ท่านยังไม่เคยลงทะเบียนข้อมูลส่วนตัว
-          ไม่สามารถดำเนินการเพื่อบันทึกพิกัดได้ กรุณาลงทะเบียนข้อมูลส่วนตัว
+          ท่านยังไม่เคยลงทะเบียนข้อมูลส่วนตัว ไม่สามารถดำเนินการเพื่อบันทึกพิกัดได้
+          กรุณาลงทะเบียนข้อมูลส่วนตัว
         </p>
         <div style={{ height: '24px' }} />
         <Link to="/contact/new">
           <button className="primary-btn">ลงทะเบียนข้อมูลส่วนตัว</button>
         </Link>
-        {deviceEnv === 'liff' ? (
-          <button onClick={closeApp}>ปิดหน้านี้</button>
-        ) : null}
+        {deviceEnv === 'liff' ? <button onClick={closeApp}>ปิดหน้านี้</button> : null}
       </AlertDialog>
     )
   }
@@ -312,9 +312,7 @@ export function CatchBoundary() {
       <AlertDialog isOpen={true} ariaLabelledBy={id}>
         <p id={id}>ท่านไม่มีสิทธิ์เข้าถึงข้อมูลส่วนนี้!</p>
         <div style={{ height: '24px' }} />
-        {deviceEnv === 'liff' ? (
-          <button onClick={closeApp}>ปิดหน้านี้</button>
-        ) : null}
+        {deviceEnv === 'liff' ? <button onClick={closeApp}>ปิดหน้านี้</button> : null}
       </AlertDialog>
     )
   }
@@ -339,10 +337,9 @@ const SuccessDialog: React.FC<{ isOpen: boolean; onDismiss?: () => any }> = ({
         ขั้นตอนลงทะเบียนสำเร็จ
       </h1>
       <p>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum, cum
-        accusantium quo vero, eaque aliquam quam optio, dolores doloribus sunt
-        ullam doloremque consequuntur mollitia animi nisi dolorum maiores labore
-        molestias?
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum, cum accusantium quo vero,
+        eaque aliquam quam optio, dolores doloribus sunt ullam doloremque consequuntur mollitia
+        animi nisi dolorum maiores labore molestias?
       </p>
       <div style={{ height: '24px' }} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>

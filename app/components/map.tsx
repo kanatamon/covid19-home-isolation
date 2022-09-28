@@ -31,29 +31,27 @@ export const Map: React.FC<MapProps> = ({
         setMap(newMap)
       }
     },
-    [map]
+    [defaultOptions, map, options],
   )
 
   useDeepCompareEffectForMaps(
     function applyOptionsToMap() {
       map?.setOptions(options)
     },
-    [map, options]
+    [map, options],
   )
 
   React.useEffect(
     function manageEventListeners() {
       if (map) {
-        ;['idle'].forEach((eventName) =>
-          google.maps.event.clearListeners(map, eventName)
-        )
+        ;['idle'].forEach((eventName) => google.maps.event.clearListeners(map, eventName))
 
         if (onIdle) {
           map.addListener('idle', () => onIdle(map))
         }
       }
     },
-    [map, onIdle]
+    [map, onIdle],
   )
 
   // React.useEffect(
@@ -114,21 +112,20 @@ export const Map: React.FC<MapProps> = ({
       >
         {smartInteractGuard}
         <div ref={ref} style={{ width: '100%', height: '100%' }} />
-        {React.Children.map(children, (child) => {
+        {/* {React.Children.map(children, (child) => {
           if (React.isValidElement(child)) {
             // set the map prop on the child component
             return React.cloneElement(child, { map })
           }
-        })}
+        })} */}
+        {children}
       </div>
     </div>
   )
 }
 
-function useDeepCompareEffectForMaps(
-  callback: React.EffectCallback,
-  dependencies: any[]
-) {
+function useDeepCompareEffectForMaps(callback: React.EffectCallback, dependencies: any[]) {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   React.useEffect(callback, dependencies.map(useDeepCompareMemoize))
 }
 
@@ -142,24 +139,19 @@ function useDeepCompareMemoize(value: any) {
   return ref.current
 }
 
-const deepCompareEqualsForMaps = createCustomEqual(
-  (deepEqual) => (a: any, b: any) => {
-    if (
-      isLatLngLiteral(a) ||
-      a instanceof google.maps.LatLng ||
-      isLatLngLiteral(b) ||
-      b instanceof google.maps.LatLng
-    ) {
-      return new google.maps.LatLng(a).equals(new google.maps.LatLng(b))
-    }
-
-    // use fast-equals for other objects
-    return deepEqual(a, b)
+const deepCompareEqualsForMaps = createCustomEqual((deepEqual) => (a: any, b: any) => {
+  if (
+    isLatLngLiteral(a) ||
+    a instanceof google.maps.LatLng ||
+    isLatLngLiteral(b) ||
+    b instanceof google.maps.LatLng
+  ) {
+    return new google.maps.LatLng(a).equals(new google.maps.LatLng(b))
   }
-)
+
+  // use fast-equals for other objects
+  return deepEqual(a, b)
+})
 
 const isLatLngLiteral = (obj: any) =>
-  obj != null &&
-  typeof obj === 'object' &&
-  Number.isFinite(obj.lat) &&
-  Number.isFinite(obj.lng)
+  obj != null && typeof obj === 'object' && Number.isFinite(obj.lat) && Number.isFinite(obj.lng)

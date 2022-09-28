@@ -1,7 +1,8 @@
 import moment from 'moment'
 import { faker } from '@faker-js/faker'
 
-import { HomeIsolationForm, Prisma } from '@prisma/client'
+import type { HomeIsolationForm } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 
 import { db } from '~/utils/db.server'
 import { FULL_TREATMENT_DAYS } from '~/domain/treatment'

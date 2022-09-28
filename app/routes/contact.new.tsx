@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { unauthorized, unprocessableEntity } from 'remix-utils'
-import { ActionFunction, json, LinksFunction, LoaderFunction } from "@remix-run/node";
-import { useCatch } from "@remix-run/react";
+import type { ActionFunction, LinksFunction, LoaderFunction } from '@remix-run/node'
+import { json } from '@remix-run/node'
+import { useCatch } from '@remix-run/react'
 import { validationError } from 'remix-validated-form'
 
 import { requireUserLineId } from '~/utils/session.server'
@@ -29,9 +30,7 @@ export const action: ActionFunction = async ({ request }) => {
   const userLineId = await requireUserLineId(request)
   await requireNewUserOnly(userLineId)
 
-  const result = await homeIsolationFormValidator.validate(
-    await request.formData()
-  )
+  const result = await homeIsolationFormValidator.validate(await request.formData())
   if (result.error) return validationError(result.error)
 
   const { data } = result
@@ -97,9 +96,7 @@ export default function NewContactRoute() {
         }}
       >
         {profile ? (
-          <div
-            style={{ padding: '32px 24px', width: '100%', maxWidth: '500px' }}
-          >
+          <div style={{ padding: '32px 24px', width: '100%', maxWidth: '500px' }}>
             <NewHomeIsolationFormEditor
               action="."
               onSuccess={onNewFormSubmittedSuccessfullyHandler}
@@ -129,18 +126,13 @@ export function CatchBoundary() {
   const { deviceEnv, closeApp } = useLIFFUtilsBeforeInit()
   const caught = useCatch()
 
-  if (
-    typeof caught.data === 'string' &&
-    caught.data.match(/You've already create contact/i)
-  ) {
+  if (typeof caught.data === 'string' && caught.data.match(/You've already create contact/i)) {
     const id = 'error-alert'
     return (
       <AlertDialog isOpen={true} ariaLabelledBy={id}>
         <p id={id}>ท่านเคยลงทะเบียนเรียบร้อยแล้ว ไม่สามารถลงทะเบียนซ้ำได้</p>
         <div style={{ height: '24px' }} />
-        {deviceEnv === 'liff' ? (
-          <button onClick={closeApp}>ปิดหน้านี้</button>
-        ) : null}
+        {deviceEnv === 'liff' ? <button onClick={closeApp}>ปิดหน้านี้</button> : null}
       </AlertDialog>
     )
   }
@@ -158,15 +150,12 @@ const SuccessNewFormDialog: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
         ขั้นตอนลงทะเบียนสำเร็จ
       </h1>
       <p>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum, cum
-        accusantium quo vero, eaque aliquam quam optio, dolores doloribus sunt
-        ullam doloremque consequuntur mollitia animi nisi dolorum maiores labore
-        molestias?
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum, cum accusantium quo vero,
+        eaque aliquam quam optio, dolores doloribus sunt ullam doloremque consequuntur mollitia
+        animi nisi dolorum maiores labore molestias?
       </p>
       <div style={{ height: '24px' }} />
-      {deviceEnv === 'liff' ? (
-        <button onClick={closeApp}>ปิดหน้านี้</button>
-      ) : null}
+      {deviceEnv === 'liff' ? <button onClick={closeApp}>ปิดหน้านี้</button> : null}
     </AlertDialog>
   )
 }

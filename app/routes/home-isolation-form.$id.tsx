@@ -1,6 +1,7 @@
-import { HomeIsolationForm, Patient } from '@prisma/client'
-import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import type { HomeIsolationForm, Patient } from '@prisma/client'
+import type { ActionFunction, LoaderFunction } from '@remix-run/node'
+import { json } from '@remix-run/node'
+import { useLoaderData } from '@remix-run/react'
 import { badRequest, notFound } from 'remix-utils'
 import { validationError } from 'remix-validated-form'
 
@@ -57,9 +58,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
 export default function HomeIsolationFormRoute() {
   const data = useLoaderData<LoaderData>()
-  const homeIsolationFormValues = parseToHomeIsolationFormValues(
-    data.homeIsolationForm
-  )
+  const homeIsolationFormValues = parseToHomeIsolationFormValues(data.homeIsolationForm)
   const methods = useHomeIsolationFormValues({
     defaultValues: homeIsolationFormValues,
   })
@@ -84,10 +83,7 @@ const deleteHomeIsolationForm = async (formId: string | undefined) => {
   return json({}, 200)
 }
 
-const updateHomeIsolationForm = async (
-  form: FormData,
-  formId: string | undefined
-) => {
+const updateHomeIsolationForm = async (form: FormData, formId: string | undefined) => {
   const result = await homeIsolationFormValidator.validate(form)
   if (result.error) {
     return validationError(result.error)
@@ -104,21 +100,18 @@ const updateHomeIsolationForm = async (
     throw notFound("Can't update what does not exist")
   }
 
-  const { patients: submittingPatients, ...submittingHomeIsolationForm } =
-    result.data
+  const { patients: submittingPatients, ...submittingHomeIsolationForm } = result.data
 
   const submittingPatientIds = submittingPatients.map((patient) => patient.id)
   const toDeletePatients = savedForm.patients.filter(
-    (savedPatient) => !submittingPatientIds.includes(savedPatient.id)
+    (savedPatient) => !submittingPatientIds.includes(savedPatient.id),
   )
 
   await db.homeIsolationForm.update({
     where: { id: formId },
     data: {
       ...submittingHomeIsolationForm,
-      treatmentDayCount: calculateTreatmentDayCount(
-        submittingHomeIsolationForm.admittedAt
-      ),
+      treatmentDayCount: calculateTreatmentDayCount(submittingHomeIsolationForm.admittedAt),
       patients: {
         delete: toDeletePatients.map((item) => ({ id: item.id })),
         upsert: submittingPatients.map((patient) => ({

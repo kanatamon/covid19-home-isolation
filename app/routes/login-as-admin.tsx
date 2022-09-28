@@ -1,9 +1,7 @@
-import { ActionFunction, json } from "@remix-run/node";
-import { Form } from "@remix-run/react";
-import {
-  isValidAdminCredential,
-  createAdminSession,
-} from '~/utils/session.server'
+import type { ActionFunction } from '@remix-run/node'
+import { json } from '@remix-run/node'
+import { Form } from '@remix-run/react'
+import { isValidAdminCredential, createAdminSession } from '~/utils/session.server'
 
 type ActionData = {
   formError?: string

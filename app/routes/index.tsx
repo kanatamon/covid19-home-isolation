@@ -1,7 +1,8 @@
 import { useRef } from 'react'
-import { HomeIsolationForm, Patient } from '@prisma/client'
-import { json, LoaderFunction } from "@remix-run/node";
-import { Form, Link, useLoaderData, useSubmit, useTransition } from "@remix-run/react";
+import type { HomeIsolationForm, Patient } from '@prisma/client'
+import type { LoaderFunction } from '@remix-run/node'
+import { json } from '@remix-run/node'
+import { Form, Link, useLoaderData, useSubmit, useTransition } from '@remix-run/react'
 
 import { db } from '~/utils/db.server'
 import { requireUserLineId } from '~/utils/session.server'
@@ -36,14 +37,8 @@ export default function Index() {
   const action =
     deviceEnv === 'browser' ? (
       <Form ref={formRef} action="/logout" method="post">
-        <button
-          type="submit"
-          onClick={logoutHandler}
-          disabled={transition.state === 'submitting'}
-        >
-          {transition.state === 'submitting'
-            ? 'กำลังออกจากระบบ...'
-            : 'ออกจากระบบ'}
+        <button type="submit" onClick={logoutHandler} disabled={transition.state === 'submitting'}>
+          {transition.state === 'submitting' ? 'กำลังออกจากระบบ...' : 'ออกจากระบบ'}
         </button>
       </Form>
     ) : null

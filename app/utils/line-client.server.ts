@@ -1,5 +1,5 @@
+import type { ClientConfig } from '@line/bot-sdk'
 import {
-  ClientConfig,
   Client,
   HTTPError,
   SignatureValidationFailed,
@@ -7,7 +7,7 @@ import {
   RequestError,
   ReadError,
 } from '@line/bot-sdk'
-import { json } from "@remix-run/node";
+import { json } from '@remix-run/node'
 import { badRequest } from 'remix-utils'
 
 const CHANNEL_ACCESS_TOKEN = process.env.CHANEL_ACCESS_TOKEN
@@ -19,9 +19,7 @@ if (
   typeof CHANNEL_SECRET !== 'string' ||
   typeof LIFF_ID !== 'string'
 ) {
-  throw new Error(
-    'LIFF_ID, CHANEL_ACCESS_TOKEN, and CHANEL_SECRET must be set!'
-  )
+  throw new Error('LIFF_ID, CHANEL_ACCESS_TOKEN, and CHANEL_SECRET must be set!')
 }
 
 const config: ClientConfig = {

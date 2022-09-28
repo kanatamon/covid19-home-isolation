@@ -2,15 +2,13 @@ import React from 'react'
 
 type GetCurrentPositionState = 'idle' | 'pending' | 'success' | 'error'
 
-export const useGetCurrentPosition = () => {
+export const useGetCurrentPosition = (onFetchSuccess?: (pos: GeolocationPosition) => any) => {
   const [state, setState] = React.useState<GetCurrentPositionState>('idle')
   const [position, setPosition] = React.useState<google.maps.LatLngLiteral>()
 
   const fetch = () => {
     if (!navigator?.geolocation) {
-      console.warn(
-        `ERROR: 'window.navigator' is not supported on your browser.`
-      )
+      console.warn(`ERROR: 'window.navigator' is not supported on your browser.`)
       setState('error')
       return
     }
@@ -22,6 +20,7 @@ export const useGetCurrentPosition = () => {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
         })
+        onFetchSuccess?.(pos)
       },
       (error) => {
         setState('error')
@@ -31,7 +30,7 @@ export const useGetCurrentPosition = () => {
         enableHighAccuracy: true,
         timeout: 5000,
         maximumAge: 0,
-      }
+      },
     )
   }
 

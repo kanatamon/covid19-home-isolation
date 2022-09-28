@@ -1,6 +1,7 @@
 import React from 'react'
-import { ActionFunction, HeadersFunction, json, LoaderFunction, redirect } from "@remix-run/node";
-import { Form, useLoaderData, useSubmit, useTransition } from "@remix-run/react";
+import type { ActionFunction, HeadersFunction, LoaderFunction } from '@remix-run/node'
+import { json, redirect } from '@remix-run/node'
+import { Form, useLoaderData, useSubmit, useTransition } from '@remix-run/react'
 import { badRequest } from 'remix-utils'
 import { useGetLINEProfile } from '~/hooks/useLIFF/useGetLineProfile'
 import { createUserSession, getUserLineId } from '~/utils/session.server'
@@ -89,19 +90,12 @@ export default function LoginRoute() {
         submit(formRef.current)
       }
     },
-    [idToken]
+    [idToken],
   )
 
-  const searchParamsField = Object.entries(data.searchParams).map(
-    ([name, value]) => (
-      <input
-        key={`${name}:${value}`}
-        type="hidden"
-        name={name}
-        value={String(value)}
-      />
-    )
-  )
+  const searchParamsField = Object.entries(data.searchParams).map(([name, value]) => (
+    <input key={`${name}:${value}`} type="hidden" name={name} value={String(value)} />
+  ))
 
   return (
     <main style={{ display: 'grid', placeItems: 'center', height: '100%' }}>

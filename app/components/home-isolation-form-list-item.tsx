@@ -1,5 +1,5 @@
 import React from 'react'
-import { HomeIsolationForm, Patient } from '@prisma/client'
+import type { HomeIsolationForm, Patient } from '@prisma/client'
 
 import { HealthViz } from '~/components/health-viz'
 import { useClipboard } from '~/hooks/useClipboard'
@@ -66,10 +66,7 @@ export const HomeIsolationFormListItem: React.FC<{
           Map
         </ActionBtn>
         <ActionBtn onClick={onEditBtnClick}>Edit</ActionBtn>
-        <ActionBtn
-          onClick={copyDataToClipboard}
-          disabled={clipboard.state !== 'support'}
-        >
+        <ActionBtn onClick={copyDataToClipboard} disabled={clipboard.state !== 'support'}>
           Copy
         </ActionBtn>
       </ActionsList>
@@ -77,10 +74,7 @@ export const HomeIsolationFormListItem: React.FC<{
   )
 }
 
-const ActionsList: React.FC<{ style?: React.CSSProperties }> = ({
-  children,
-  style = {},
-}) => {
+const ActionsList: React.FC<{ style?: React.CSSProperties }> = ({ children, style = {} }) => {
   return (
     <div
       style={{
@@ -98,10 +92,7 @@ const ActionsList: React.FC<{ style?: React.CSSProperties }> = ({
 }
 
 const ActionBtn: React.FC<
-  React.DetailedHTMLProps<
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
-    HTMLButtonElement
-  >
+  React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>
 > = ({ children, style, ...other }) => {
   return (
     <button

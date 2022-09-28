@@ -1,12 +1,14 @@
-import { ActionFunction, json } from "@remix-run/node";
+import type { ActionFunction } from '@remix-run/node'
+import { json } from '@remix-run/node'
 import { badRequest, serverError } from 'remix-utils'
-import { TextMessage } from '@line/bot-sdk'
+import type { TextMessage } from '@line/bot-sdk'
 
 import { db } from '~/utils/db.server'
 import { activeTreatmentPeriod, Treatment } from '~/domain/treatment'
 import { lineClient } from '~/utils/line-client.server'
 import { requireWebhookSignature } from '~/utils/webhook.server'
-import { ContactsQueryFn, Contact, contactSchema } from '~/domain/notify-message.server'
+import type { ContactsQueryFn, Contact } from '~/domain/notify-message.server'
+import { contactSchema } from '~/domain/notify-message.server'
 
 type NotifyType = 'END_TREATMENT' | 'PREPARE_TO_END_TREATMENT'
 

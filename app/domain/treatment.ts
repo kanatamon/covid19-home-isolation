@@ -1,5 +1,6 @@
 import chroma from 'chroma-js'
-import moment, { Moment } from 'moment'
+import type { Moment } from 'moment'
+import moment from 'moment'
 
 const CERT_AVAILABLE_DAYS = 11
 const SERVICE_DAY = 9
@@ -17,10 +18,7 @@ export const calculateTreatmentDayCount = (admittedAt: Date) => {
 }
 
 export const calculateRecoveryDay = (admittedAt: Date) => {
-  return moment(admittedAt)
-    .add(FULL_TREATMENT_DAYS, 'day')
-    .set({ hour: 6, minute: 0 })
-    .toDate()
+  return moment(admittedAt).add(FULL_TREATMENT_DAYS, 'day').set({ hour: 6, minute: 0 }).toDate()
 }
 
 export const hasRecoverySinceNow = (admittedAt: Date) => {
@@ -59,9 +57,7 @@ export class Treatment {
   }
 
   public getEndHomeIsolationDate(): Date {
-    return moment(this.admittedDay)
-      .add(FULL_HOME_ISOLATION_DAYS, 'days')
-      .toDate()
+    return moment(this.admittedDay).add(FULL_HOME_ISOLATION_DAYS, 'days').toDate()
   }
 
   public getRecoveryDate(): Date {
@@ -77,5 +73,4 @@ export class Treatment {
   }
 }
 
-const clamp = (num: number, min: number, max: number) =>
-  Math.min(Math.max(num, min), max)
+const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max)

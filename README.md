@@ -24,6 +24,8 @@ TODO: Add figure
 
 ## Netlify Setup
 
+> 🚨 Netlify must be installed globally, otherwise `npm run dev` won't work.
+
 1. Install the [Netlify CLI](https://www.netlify.com/products/dev/):
 
    ```sh
@@ -98,8 +100,6 @@ TODO: Add description
 ### Why Remix ?
 
 TODO: Add description
-
--
 
 ### Why Netlify ?
 

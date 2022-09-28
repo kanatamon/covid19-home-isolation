@@ -1,5 +1,14 @@
-import { json, LinksFunction, LoaderFunction, MetaFunction } from "@remix-run/node";
-import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from "@remix-run/react";
+import type { LinksFunction, LoaderFunction, MetaFunction } from '@remix-run/node'
+import { json } from '@remix-run/node'
+import {
+  Links,
+  LiveReload,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  useLoaderData,
+} from '@remix-run/react'
 
 import stylesUrl from '~/styles/index.css'
 

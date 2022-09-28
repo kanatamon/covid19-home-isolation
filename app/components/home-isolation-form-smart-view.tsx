@@ -1,5 +1,5 @@
 import React from 'react'
-import { HomeIsolationForm, Patient } from '@prisma/client'
+import type { HomeIsolationForm, Patient } from '@prisma/client'
 
 import {
   HomeIsolationFormEditor,

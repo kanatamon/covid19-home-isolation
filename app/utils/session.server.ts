@@ -1,4 +1,4 @@
-import { createCookieSessionStorage, redirect } from "@remix-run/node";
+import { createCookieSessionStorage, redirect } from '@remix-run/node'
 
 type UserRole = 'admin'
 
@@ -8,10 +8,7 @@ type LoginForm = {
 }
 
 export function isValidAdminCredential({ username, password }: LoginForm) {
-  return (
-    username === process.env.ADMIN_USERNAME &&
-    password === process.env.ADMIN_PASSWORD
-  )
+  return username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD
 }
 
 const sessionSecret = process.env.SESSION_SECRET
@@ -40,7 +37,7 @@ function getUserSession(request: Request) {
 
 export async function requireAdminPermission(
   request: Request,
-  redirectTo: string = new URL(request.url).pathname
+  redirectTo: string = new URL(request.url).pathname,
 ): Promise<UserRole> {
   const userRole = await getUserRole(request)
   if (userRole !== 'admin') {
@@ -71,7 +68,7 @@ export async function getUserLineId(request: Request) {
 
 export async function requireUserLineId(
   request: Request,
-  redirectTo: string = new URL(request.url).pathname
+  redirectTo: string = new URL(request.url).pathname,
 ) {
   const session = await getUserSession(request)
   const userLineId = session.get('userLineId')
@@ -93,10 +90,7 @@ export async function createAdminSession(redirectTo: string) {
   })
 }
 
-export async function createUserSession(
-  userLineId: string,
-  redirectTo: string
-) {
+export async function createUserSession(userLineId: string, redirectTo: string) {
   const session = await storage.getSession()
   session.set('role', 'user')
   session.set('userLineId', userLineId)

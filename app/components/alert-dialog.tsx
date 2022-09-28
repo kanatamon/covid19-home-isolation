@@ -5,10 +5,7 @@ export const AlertDialog: React.FC<{
   ariaLabelledBy: string
 }> = ({ isOpen, ariaLabelledBy, children }) => {
   return (
-    <DialogOverlay
-      isOpen={isOpen}
-      style={{ display: 'grid', placeItems: 'center' }}
-    >
+    <DialogOverlay isOpen={isOpen} style={{ display: 'grid', placeItems: 'center' }}>
       <DialogContent
         aria-labelledby={ariaLabelledBy}
         style={{ borderRadius: '4px', maxWidth: '350px', width: '90%' }}

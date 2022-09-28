@@ -1,11 +1,8 @@
-import type { ActionFunction } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import type { ActionFunction } from '@remix-run/node'
+import { json } from '@remix-run/node'
 
 import { db } from '~/utils/db.server'
-import {
-  calculateTreatmentDayCount,
-  activeTreatmentPeriod,
-} from '~/domain/treatment'
+import { calculateTreatmentDayCount, activeTreatmentPeriod } from '~/domain/treatment'
 import { requireWebhookSignature } from '~/utils/webhook.server'
 
 export const action: ActionFunction = async ({ request }) => {
