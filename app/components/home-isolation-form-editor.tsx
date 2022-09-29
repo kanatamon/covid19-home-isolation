@@ -83,12 +83,54 @@ export function useHomeIsolationFormValues({
   return methods
 }
 
+function useEventFetcher(options?: {
+  onSuccess?: () => any
+  mapDataToSuccess?: (data: any) => boolean
+}) {
+  const fetcher = useFetcher()
+  const isSuccess = options?.mapDataToSuccess?.(fetcher.data) ?? false
+
+  React.useEffect(
+    function emitOnSuccess() {
+      isSuccess && options?.onSuccess?.()
+    },
+    // [Declarative Note] By nature of the dataflow in Remix, which a submitting of form will trigger
+    // internal state to change, this happening under the hood of useFetcher, useActionData, and etc.
+    //
+    // What we feel familiar with might look like this;
+    // eg.
+    //   at client-side
+    //   ...
+    //   const res = await fetch(`https://some.api`, { method: 'POST})
+    //   const data = await res.json()
+    //   if (data.isOk) onSuccessEventHandler()
+    //   ...
+    // Basically, we can use this pattern and executing fine, because it just a standard DOM API
+    // anyway. But Remix opinionated us the dataflow, which benefit many more like; automatic invalidate
+    // on every nested route for data loader, automatic request canceling, and etc.
+    //
+    // Then to get the benefits, we will go for the Remix's data-writes using `useFetcher`. But the
+    // Remix intentionally never provide async utility like `await fetch()`. So, this useEffect is
+    // the hack with tightly coupling to Remix's framework.
+    //
+    // Ref: https://www.youtube.com/watch?v=bMLej7bg5Zo&ab_channel=Remix
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isSuccess],
+  )
+
+  return { fetcher, isSuccess }
+}
+
 export const NewHomeIsolationFormEditor: React.FC<{
   action: string
   onSuccess?: () => any
   defaultValues?: Partial<HomeIsolationFormValues>
 }> = ({ action, onSuccess, defaultValues = {} }) => {
-  const fetcher = useFetcher()
+  const { fetcher, isSuccess } = useEventFetcher({
+    mapDataToSuccess: (data) => JSON.stringify(fetcher.data) === '{}',
+    onSuccess,
+  })
   const methods = useHomeIsolationFormValues({
     defaultValues: {
       ...genDefaultNewFormValues(),
@@ -97,17 +139,7 @@ export const NewHomeIsolationFormEditor: React.FC<{
   })
   const { isValid } = useFormState({ control: methods.control })
 
-  const hasSuccessfullySubmitted = JSON.stringify(fetcher.data) === '{}'
-
-  React.useEffect(
-    function emitOnSuccess() {
-      hasSuccessfullySubmitted && onSuccess?.()
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [hasSuccessfullySubmitted],
-  )
-
-  const canEdit = fetcher.state !== 'submitting' && !hasSuccessfullySubmitted
+  const canEdit = fetcher.state !== 'submitting' && !isSuccess
 
   return (
     <fetcher.Form
@@ -124,7 +156,7 @@ export const NewHomeIsolationFormEditor: React.FC<{
     >
       <HomeIsolationFormCommon methods={methods} canEdit={canEdit} />
       <section>
-        {hasSuccessfullySubmitted ? (
+        {isSuccess ? (
           <button disabled>ส่งแบบฟอร์มสำเร็จแล้ว</button>
         ) : (
           <>
