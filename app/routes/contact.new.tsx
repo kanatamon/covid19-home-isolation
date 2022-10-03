@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { unauthorized, unprocessableEntity } from 'remix-utils'
 import type { ActionFunction, LinksFunction, LoaderFunction } from '@remix-run/node'
 import { json } from '@remix-run/node'
@@ -82,9 +82,9 @@ export default function NewContactRoute() {
   const [isOpenSuccessDialog, setIsOpenSuccessDialog] = useState(false)
   const { profile } = useGetLINEProfile()
 
-  const onNewFormSubmittedSuccessfullyHandler = () => {
+  const onNewFormSubmittedSuccessfullyHandler = useCallback(() => {
     setIsOpenSuccessDialog(true)
-  }
+  }, [])
 
   return (
     <>

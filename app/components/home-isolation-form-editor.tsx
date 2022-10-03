@@ -91,7 +91,7 @@ function useEventFetcher(options?: {
   const isSuccess = options?.mapDataToSuccess?.(fetcher.data) ?? false
 
   React.useEffect(
-    function emitOnSuccess() {
+    function triggerOnSuccess() {
       isSuccess && options?.onSuccess?.()
     },
     // [Declarative Note] By nature of the dataflow in Remix, which a submitting of form will trigger
@@ -122,58 +122,63 @@ function useEventFetcher(options?: {
   return { fetcher, isSuccess }
 }
 
-export const NewHomeIsolationFormEditor: React.FC<{
+type NewHomeIsolationFormEditorProps = {
   action: string
   onSuccess?: () => any
   defaultValues?: Partial<HomeIsolationFormValues>
-}> = ({ action, onSuccess, defaultValues = {} }) => {
-  const { fetcher, isSuccess } = useEventFetcher({
-    mapDataToSuccess: (data) => JSON.stringify(fetcher.data) === '{}',
-    onSuccess,
-  })
-  const methods = useHomeIsolationFormValues({
-    defaultValues: {
-      ...genDefaultNewFormValues(),
-      ...defaultValues,
-    },
-  })
-  const { isValid } = useFormState({ control: methods.control })
-
-  const canEdit = fetcher.state !== 'submitting' && !isSuccess
-
-  return (
-    <fetcher.Form
-      replace
-      method="post"
-      action={action}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--gap)',
-        // @ts-ignore
-        '--gap': '1.5em',
-      }}
-    >
-      <HomeIsolationFormCommon methods={methods} canEdit={canEdit} />
-      <section>
-        {isSuccess ? (
-          <button disabled>ส่งแบบฟอร์มสำเร็จแล้ว</button>
-        ) : (
-          <>
-            <input type="hidden" name="_method" value="create" />
-            <button
-              type="submit"
-              className="primary-btn"
-              disabled={fetcher.state === 'submitting' || !isValid}
-            >
-              {fetcher.state === 'submitting' ? 'กำลังส่งแบบฟอร์ม...' : 'ส่งแบบฟอร์ม'}
-            </button>
-          </>
-        )}
-      </section>
-    </fetcher.Form>
-  )
 }
+
+export const NewHomeIsolationFormEditor = React.memo<NewHomeIsolationFormEditorProps>(
+  ({ action, onSuccess, defaultValues = {} }) => {
+    const { fetcher, isSuccess } = useEventFetcher({
+      mapDataToSuccess: (data) => JSON.stringify(data) === '{}',
+      onSuccess,
+    })
+    const methods = useHomeIsolationFormValues({
+      defaultValues: {
+        ...genDefaultNewFormValues(),
+        ...defaultValues,
+      },
+    })
+    const { isValid } = useFormState({ control: methods.control })
+
+    const canEdit = fetcher.state !== 'submitting' && !isSuccess
+
+    return (
+      <fetcher.Form
+        replace
+        method="post"
+        action={action}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--gap)',
+          // @ts-ignore
+          '--gap': '1.5em',
+        }}
+      >
+        <HomeIsolationFormCommon methods={methods} canEdit={canEdit} />
+        <section>
+          {isSuccess ? (
+            <button disabled>ส่งแบบฟอร์มสำเร็จแล้ว</button>
+          ) : (
+            <>
+              <input type="hidden" name="_method" value="create" />
+              <button
+                type="submit"
+                className="primary-btn"
+                disabled={fetcher.state === 'submitting' || !isValid}
+              >
+                {fetcher.state === 'submitting' ? 'กำลังส่งแบบฟอร์ม...' : 'ส่งแบบฟอร์ม'}
+              </button>
+            </>
+          )}
+        </section>
+      </fetcher.Form>
+    )
+  },
+)
+NewHomeIsolationFormEditor.displayName = `${NewHomeIsolationFormEditor.name}`
 
 export const HomeIsolationFormEditor: React.FC<{
   methods: UseFormReturn<HomeIsolationFormValues>
@@ -593,4 +598,4 @@ const DisplayDateInBuddhistEra = React.forwardRef<
     </button>
   )
 })
-DisplayDateInBuddhistEra.displayName = 'DisplayDateInBuddhistEra'
+DisplayDateInBuddhistEra.displayName = `${DisplayDateInBuddhistEra}`
