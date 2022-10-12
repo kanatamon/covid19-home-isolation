@@ -10,7 +10,8 @@
     "start": "cross-env NODE_ENV=production netlify dev",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
-    "setup:schema:test": "dotenv -e .env.test -- prisma db push",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:test": "dotenv -e .env.test -- prisma db push --accept-data-loss",
     "test": "dotenv -e .env.test -- jest -i",
     "format": "prettier --write \"./**/*.(ts|tsx|js|css|md|json)\" --ignore-path .gitignore",
     "lint": "eslint --ext .ts,.tsx app/"

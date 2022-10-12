@@ -4,6 +4,8 @@ import { faker } from '@faker-js/faker'
 import type { HomeIsolationForm } from '@prisma/client'
 import { Prisma } from '@prisma/client'
 
+import { truncateDb } from '@/test/helpers/truncate-db'
+
 import { db } from '~/utils/db.server'
 import { FULL_TREATMENT_DAYS } from '~/domain/treatment'
 import { queryContactsWithinActiveTreatmentPeriod } from '~/domain/notify-message.server'
@@ -14,12 +16,7 @@ import {
 import { queryContactsWhoNeverSubmittedLocation } from '~/routes/webhooks/notify-contact-location-submission'
 
 beforeEach(async () => {
-  await cleanupDb()
-})
-
-afterAll(async () => {
-  await cleanupDb()
-  await db.$disconnect()
+  await truncateDb()
 })
 
 describe(`[built-in-utils]`, () => {
@@ -192,16 +189,6 @@ describe(`${queryContactsWhoNeverSubmittedLocation.name}`, () => {
     expect(queriedContacts).toEqual(expectedContacts)
   })
 })
-
-async function cleanupDb() {
-  // [Declarative Note] This is NOT reliable solution, expected behavior is deleting successfully on
-  // every executing, but sometime they're NOT without any thrown errors. But there is the fact that,
-  // we're already in risk of inconsistent connection to the runtime database server. By technical
-  // perspective, it's IMPOSSIBLE to make the consistent connection in the real world anyway.
-  // But any failure while clean-up is extremely rare and hard to reproduce, we would accept the risk.
-  // So, the inconsistent connection behavior will be ACCEPTABLE!
-  return db.$transaction([db.homeIsolationForm.deleteMany(), db.patient.deleteMany()])
-}
 
 function genContactsWhichAdmitted_Outside_ActiveTreatmentPeriod() {
   return [

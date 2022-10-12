@@ -48,9 +48,18 @@ When we're developing locally, we have postgres databases running in a docker co
 docker compose up
 ```
 
-> 🚨 Make sure that `.env` is fulfilled entirely, you can use `.env.example` as a template
+> 🚨 Make sure that `.env` is fulfilled entirely, you can use `.env.example` as a template. And be
+> noticed that `.env.example` is already set
+> `DATABASE_URL="postgresql://prisma:prisma@localhost:5433/dev"` for development out of the box.
 
-The Netlify CLI starts your app in development mode, rebuilding assets on file changes.
+Then you must make sure the development's database-schema is up-to-date. You must manually execute
+the following command.
+
+```sh
+npm run db:migrate:dev
+```
+
+Finally, the Netlify CLI starts your app in development mode, rebuilding assets on file changes.
 
 ```sh
 npm run dev
@@ -60,8 +69,8 @@ Open up [http://localhost:3000](http://localhost:3000), and you should be ready 
 
 This project is coupling tightly to LINE Front-end Framework (LIFF). Then connection between our
 server to LINE's web-service must be established securely, in the other hand HTTPS must be
-established. Then we can't stay on _localhost_, so we do need some hack to establish HTTPS during
-the development.
+established. That make us to can't stay on _localhost_, so we do need some hack to establish HTTPS
+during the development.
 
 You can use any solution to provide HTTPS during the development. But what we using is Caddy server.
 Which is basically, instance a reverse proxy server to _localhost:3000_.
@@ -71,6 +80,21 @@ caddy run
 ```
 
 Open up [https://dev.localhost](https://dev.localhost), and you are good to go over HTTPS!
+
+## Testing
+
+The application is tightly coupling to database. And that make a caveat where we can't run tests in
+parallel which the default behavior of Jest. Because each test-case might dirty the database while
+another one is running. Then caused all test-cases to be inconsistent adn hard to debug. So we need
+to avoid inconsistent behavior by running jest with an option `--runInBand` or `-i` for an alias.
+
+```sh
+npx dotenv -e .env.test -- jest -i
+
+# or with alias
+
+npm test
+```
 
 ## Deployment
 
@@ -543,3 +567,5 @@ TODO: Mention the re-design to fix this see
 ## References
 
 - [Database access on the Edge with Next.js, Vercel & Prisma Data Proxy](https://www.prisma.io/blog/database-access-on-the-edge-8F0t1s1BqOJE)
+
+- [Isolated Integration Testing with Remix, Vitest, and Prisma](https://www.simplethread.com/isolated-integration-testing-with-remix-vitest-and-prisma/)

@@ -4,10 +4,11 @@ services:
   db:
     image: postgres:13
     restart: always
-    container_name: query-testing-db
     ports:
       - '5433:5432'
     environment:
       POSTGRES_USER: prisma
       POSTGRES_PASSWORD: prisma
-      POSTGRES_DB: tests
+      POSTGRES_DATABASES: dev,test
+    volumes:
+      - ./scripts/pg-init-scripts:/docker-entrypoint-initdb.d
