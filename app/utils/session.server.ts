@@ -31,8 +31,12 @@ const storage = createCookieSessionStorage({
   },
 })
 
+export function getSession(cookies: string) {
+  return storage.getSession(cookies)
+}
+
 function getUserSession(request: Request) {
-  return storage.getSession(request.headers.get('Cookie'))
+  return getSession(request.headers.get('Cookie') as string)
 }
 
 export async function requireAdminPermission(
