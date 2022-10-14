@@ -1,11 +1,7 @@
 import moment from 'moment'
-import { faker } from '@faker-js/faker'
-
 import type { HomeIsolationForm } from '@prisma/client'
-import { Prisma } from '@prisma/client'
 
 import { truncateDb } from '@/test/helpers/truncate-db'
-
 import { db } from '~/utils/db.server'
 import { FULL_TREATMENT_DAYS } from '~/domain/treatment'
 import { queryContactsWithinActiveTreatmentPeriod } from '~/domain/notify-message.server'
@@ -14,6 +10,7 @@ import {
   queryContactsWhoGonnaGetRecoveryByTomorrow,
 } from '~/routes/webhooks/notify-end-of-treatment'
 import { queryContactsWhoNeverSubmittedLocation } from '~/routes/webhooks/notify-contact-location-submission'
+import { buildHomeIsolationForm } from '@/prisma/utils'
 
 beforeEach(async () => {
   await truncateDb()
@@ -237,24 +234,22 @@ function genContactsBetweenInclusively({
     .map((_value, idx) => genContact({ admittedDayAgo: idx + sinceDayAgo }))
 }
 
-function genContact({ admittedDayAgo }: { admittedDayAgo: number }): Omit<HomeIsolationForm, 'id'> {
+type ContactShape = Omit<HomeIsolationForm, 'id'>
+
+function genContact({ admittedDayAgo }: { admittedDayAgo: number }): ContactShape {
   const admittedDay = moment().subtract(admittedDayAgo, 'day').startOf('day').set({ hour: 6 })
 
-  return {
-    createdAt: admittedDay.toDate(),
-    updatedAt: admittedDay.toDate(),
-    admittedAt: admittedDay.toDate(),
-    treatmentDayCount: admittedDayAgo,
-    lat: new Prisma.Decimal(0),
-    lng: new Prisma.Decimal(0),
-    zone: faker.address.city(),
-    address: faker.address.streetAddress(true),
-    landmarkNote: faker.lorem.text(),
-    phone: faker.phone.phoneNumberFormat(),
-    lineId: faker.random.alphaNumeric(20),
-    lineDisplayName: faker.name.findName(),
-    linePictureUrl: faker.internet.avatar(),
-  }
+  return buildHomeIsolationForm({
+    override: {
+      createdAt: admittedDay.toDate(),
+      updatedAt: admittedDay.toDate(),
+      admittedAt: admittedDay.toDate(),
+      treatmentDayCount: admittedDayAgo,
+    },
+    unselect: {
+      id: true,
+    },
+  })
 }
 
 function orderByAdmittedAt(a: { admittedAt: Date }, b: { admittedAt: Date }): number {
