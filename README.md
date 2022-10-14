@@ -544,6 +544,31 @@ function SomeForm({ onSuccess }: { onSuccess?: () => any }) {
 }
 ```
 
+### Unit-testing and Integration-testing are tightened with Remix's context
+
+Remix allow us to implement back-end code via `loader` and `action` function. Basically, as the
+official documentation recommended us to co-locate the functions in a specific routes'file under
+`routes` folder. Then we should do unit-testing onto `loader` and `action` functions by import it
+from any route's files. And Remix's compiler is smart to bundle separately for client-code and
+server-code with friendly warning if you broke some convention. That means client-code and
+server-code will has it own bundle and your will never suffer from seeing `window is not defined`
+error in a final server-code's bundle.
+
+But when we do unit-testing or integration-testing, we're using different compiler than Remix. We
+used Jest to do the work, but sadly Jest's compiler is not smart as Remix. It bundle all imported
+dependencies, that made hardness when doing testing by importing directly from any route's file. And
+when any route's file is imported client-code's dependencies then an error will be thrown. Unless we
+located `loader ` and `action` function outside a route's file.
+
+Another scenario is when we need to test any Component that using Remix's utility like `Fetcher`,
+`Form`, etc. That are also impossible, nowadays. Because some Remix's utility need a context that we
+don’t have access to work, unless we mock them.
+
+To do test in Remix.js, we should follow
+[sergiodxa's recommentation](https://github.com/remix-run/remix/discussions/993#discussioncomment-1792350)
+. And there is a promising solution even it's still be under
+[discussion from the official](https://github.com/remix-run/remix/discussions/2481).
+
 ### Things to improve
 
 #### No retrying strategy if any of DB query, or LINE web-service are failed
@@ -563,6 +588,9 @@ TODO: We might need MSW to mock for LINE web-services
 
 TODO: Mention the re-design to fix this see
 [#1](https://github.com/kanatamon/covid19-home-isolation/issues/1#issue-1391257706)
+
+- We should enable some devtool that helps us do `Set-Cookie` without relying on the LINE's
+  web-service
 
 ## References
 
