@@ -11,21 +11,36 @@ datasource db {
 }
 
 model HomeIsolationForm {
-  id                String    @id @default(uuid())
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  admittedAt        DateTime  @default(now())
-  treatmentDayCount Int       @default(0) @db.SmallInt
-  lat               Decimal?
-  lng               Decimal?
-  zone              String
-  address           String
-  landmarkNote      String
-  phone             String
-  patients          Patient[]
-  lineId            String?
-  lineDisplayName   String?
-  linePictureUrl    String?
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  admittedAt DateTime @default(now())
+
+  // As we known, Prisma is lacking aggregation to group by date. And we've planned to implement a
+  // dashboard with aggregated data of total patients on each day. Even this can be easily for raw
+  // SQL. But we've preferred to stick with Prisma's schema and its API.
+  // Also check the following issues;
+  // - https://github.com/prisma/prisma/issues/5761
+  // - https://github.com/prisma/prisma/issues/5560
+  //
+  // We fixed the aggreation on date by introducting this field to continue leveraging the Prisma's
+  // API like below;
+  // eg.
+  // await prisma.homeIsolationForm.aggregate({ _count: { treatmentDayCount: true }})
+  //
+  // But within this solution we must handle more work to schedule updating this field.
+  treatmentDayCount Int @default(0) @db.SmallInt
+
+  lat             Decimal?
+  lng             Decimal?
+  zone            String
+  address         String
+  landmarkNote    String
+  phone           String
+  patients        Patient[]
+  lineId          String?
+  lineDisplayName String?
+  linePictureUrl  String?
 }
 
 model Patient {
